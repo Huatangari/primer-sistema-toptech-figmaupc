@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router";
 import { Search, Filter, Upload, FileText, Download, Eye, Calendar, Tag } from "lucide-react";
 import { DocumentTypeBadge } from "../components/shared/StatusBadge";
 import { EmptyState } from "../components/shared/EmptyState";
@@ -13,6 +14,7 @@ import { Asset, Document, DocumentType, Provider } from "../../lib/types";
 const DOC_TYPES: (DocumentType | "Todos")[] = ["Todos", "Manual", "Certificado", "Contrato", "Informe Técnico", "Plano"];
 
 export function Documents() {
+  const navigate = useNavigate();
   const { data: { documents, assets, providers }, loading, error, refetch } = useData(
     () => Promise.all([getDocuments(), getAssets(), getProviders()])
       .then(([documents, assets, providers]) => ({ documents, assets, providers })),
@@ -34,6 +36,38 @@ export function Documents() {
   }, [documents, search, typeFilter]);
 
   const selectedDoc = documents.find((d) => d.id === selected);
+
+  const handleOpenDocument = (doc: Document) => {
+    if (doc.fileUrl) {
+      window.open(doc.fileUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    const fallback = `Documento: ${doc.name}\nTipo: ${doc.type}\nDescripcion: ${doc.description}\n`;
+    const blob = new Blob([fallback], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadDocument = (doc: Document) => {
+    if (doc.fileUrl) {
+      const link = document.createElement("a");
+      link.href = doc.fileUrl;
+      link.download = `${doc.name}.${doc.fileType.toLowerCase()}`;
+      link.click();
+      return;
+    }
+
+    const fallback = JSON.stringify(doc, null, 2);
+    const blob = new Blob([fallback], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${doc.name.replace(/\s+/g, "-").toLowerCase()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const typeCounts = DOC_TYPES.slice(1).map((type) => ({
     type,
@@ -94,7 +128,7 @@ export function Documents() {
         </div>
 
         <button
-          onClick={() => alert("Función disponible en la versión completa")}
+          onClick={() => navigate("/documentos/nuevo")}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors flex-shrink-0"
         >
           <Upload size={15} />
@@ -183,10 +217,26 @@ export function Documents() {
                           </td>
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-1">
-                              <button type="button" aria-label="Ver documento" className="p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                              <button
+                                type="button"
+                                aria-label="Ver documento"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleOpenDocument(doc);
+                                }}
+                                className="p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                              >
                                 <Eye size={14} aria-hidden="true" />
                               </button>
-                              <button type="button" aria-label="Descargar documento" className="p-1.5 rounded text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors">
+                              <button
+                                type="button"
+                                aria-label="Descargar documento"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDownloadDocument(doc);
+                                }}
+                                className="p-1.5 rounded text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors"
+                              >
                                 <Download size={14} aria-hidden="true" />
                               </button>
                             </div>
@@ -252,11 +302,19 @@ export function Documents() {
             )}
 
             <div className="pt-3 border-t border-gray-100 space-y-2">
-              <button type="button" className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg transition-colors">
+              <button
+                type="button"
+                onClick={() => handleOpenDocument(selectedDoc)}
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg transition-colors"
+              >
                 <Eye size={14} />
                 Ver documento
               </button>
-              <button type="button" className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm py-2.5 rounded-lg transition-colors">
+              <button
+                type="button"
+                onClick={() => handleDownloadDocument(selectedDoc)}
+                className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm py-2.5 rounded-lg transition-colors"
+              >
                 <Download size={14} />
                 Descargar
               </button>
@@ -267,3 +325,5 @@ export function Documents() {
     </div>
   );
 }
+
+

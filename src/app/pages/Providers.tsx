@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router";
 import { Search, Plus, Star, Phone, Mail, ArrowRight, Users } from "lucide-react";
 import { ProviderStatusBadge } from "../components/shared/StatusBadge";
 import { CategoryIcon } from "../components/shared/CategoryIcon";
@@ -11,6 +12,7 @@ import { getCategoryColor, formatDate } from "../../lib/utils";
 import { Asset, Provider } from "../../lib/types";
 
 export function Providers() {
+  const navigate = useNavigate();
   const { data: { providers, assets }, loading, error, refetch } = useData(
     () => Promise.all([getProviders(), getAssets()])
       .then(([providers, assets]) => ({ providers, assets })),
@@ -52,7 +54,7 @@ export function Providers() {
           />
         </div>
         <button
-          onClick={() => alert("Función disponible en la versión completa")}
+          onClick={() => navigate("/proveedores/nuevo")}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors flex-shrink-0"
         >
           <Plus size={15} />
@@ -252,3 +254,5 @@ export function Providers() {
     </div>
   );
 }
+
+

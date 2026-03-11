@@ -10,6 +10,7 @@ import type {
 import type {
   Asset, AssetHistoryEvent, Incident, IncidentEvent, Document, Provider,
 } from "../types";
+import { normalizeIncidentStatus } from "../utils/incidentStatus";
 
 // ─── Assets ───────────────────────────────────────────────────────────────────
 
@@ -55,7 +56,7 @@ export function mapIncident(row: IncidentRow): Incident {
     description: row.description,
     assetId: row.asset_id,
     priority: row.priority,
-    status: row.status,
+    status: normalizeIncidentStatus(row.status),
     reportedBy: row.reported_by,
     assignedTo: row.assigned_to ?? undefined,
     createdAt: row.created_at,

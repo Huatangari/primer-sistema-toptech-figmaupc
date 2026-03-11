@@ -7,10 +7,10 @@ import { ErrorState } from "../components/shared/ErrorState";
 import { useData } from "../hooks/useData";
 import { getIncidents } from "../../lib/services/incidents";
 import { getAssets } from "../../lib/services/assets";
-import { formatDate, timeAgo } from "../../lib/utils";
+import { formatDate, isIncidentClosed, timeAgo } from "../../lib/utils";
 import { Asset, Incident, IncidentPriority, IncidentStatus } from "../../lib/types";
 
-const STATUSES: (IncidentStatus | "Todos")[] = ["Todos", "Abierta", "En Proceso", "Resuelta", "Cerrada"];
+const STATUSES: (IncidentStatus | "Todos")[] = ["Todos", "Abierta", "En Proceso", "Resuelta"];
 const PRIORITIES: (IncidentPriority | "Todas")[] = ["Todas", "Crítica", "Alta", "Media", "Baja"];
 
 export function IncidentsList() {
@@ -42,7 +42,7 @@ export function IncidentsList() {
 
   const openCount = incidents.filter((i) => i.status === "Abierta").length;
   const inProcessCount = incidents.filter((i) => i.status === "En Proceso").length;
-  const criticalCount = incidents.filter((i) => i.priority === "Crítica" && i.status !== "Cerrada").length;
+  const criticalCount = incidents.filter((i) => i.priority === "Crítica" && !isIncidentClosed(i.status)).length;
 
   if (loading) return (
     <div className="p-6 flex items-center justify-center h-64">

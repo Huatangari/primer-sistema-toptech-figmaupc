@@ -10,7 +10,7 @@ import { useData } from "../hooks/useData";
 import { getIncidentById, getIncidentEvents } from "../../lib/services/incidents";
 import { getAssetById } from "../../lib/services/assets";
 import { closeIncident } from "../../lib/api/endpoints";
-import { getCategoryColor, formatDate, formatDateTime } from "../../lib/utils";
+import { formatDate, formatDateTime, getCategoryColor, isIncidentClosed, isIncidentOpen } from "../../lib/utils";
 import { Asset, Incident, IncidentEvent } from "../../lib/types";
 
 export function IncidentDetail() {
@@ -55,8 +55,8 @@ export function IncidentDetail() {
     );
   }
 
-  const isOpen = incident.status === "Abierta" || incident.status === "En Proceso";
-  const isResolved = incident.status === "Resuelta" || incident.status === "Cerrada";
+  const isOpen = isIncidentOpen(incident.status);
+  const isResolved = isIncidentClosed(incident.status);
 
   const handleConfirmClose = async () => {
     if (!incident || isClosing) return;
