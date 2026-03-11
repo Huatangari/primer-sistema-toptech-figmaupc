@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Building2, Eye, EyeOff, Lock, Mail, ArrowRight } from "lucide-react";
+import { Building2, Eye, EyeOff, Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
+import { login } from "../../lib/auth/authClient";
+import { IS_SUPABASE_CONFIGURED } from "../../lib/auth/authClient";
 
 export function Login() {
   const navigate = useNavigate();
@@ -8,13 +10,26 @@ export function Login() {
   const [password, setPassword] = useState("demo1234");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    setError(null);
+
+    // Modo demo sin Supabase configurado
+    if (!IS_SUPABASE_CONFIGURED) {
+      setTimeout(() => navigate("/"), 900);
+      return;
+    }
+
+    try {
+      await login(email, password);
       navigate("/");
-    }, 900);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al iniciar sesión");
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,12 +99,19 @@ export function Login() {
             <p className="text-slate-400 text-sm">Accede a tu panel de gestión técnica</p>
           </div>
 
-          {/* Demo badge */}
-          <div className="mb-6 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-            <p className="text-blue-400 text-xs" style={{ fontWeight: 500 }}>
-              🔒 Modo demo — credenciales pre-cargadas
-            </p>
-          </div>
+          {/* Demo badge o error */}
+          {error ? (
+            <div className="mb-6 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
+              <AlertCircle size={14} className="text-red-400 flex-shrink-0" />
+              <p className="text-red-400 text-xs">{error}</p>
+            </div>
+          ) : (
+            <div className="mb-6 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-blue-400 text-xs" style={{ fontWeight: 500 }}>
+                {IS_SUPABASE_CONFIGURED ? "🔒 Ingresa con tus credenciales" : "🔒 Modo demo — credenciales pre-cargadas"}
+              </p>
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             {/* Email */}

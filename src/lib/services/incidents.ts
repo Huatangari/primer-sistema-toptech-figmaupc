@@ -1,18 +1,43 @@
 import { mockIncidents, mockIncidentEvents } from "../mock-data";
 import type { Incident, IncidentEvent } from "../types";
+import { supabase, IS_SUPABASE_CONFIGURED } from "../auth/authClient";
+import { mapIncident, mapIncidentEvent } from "../api/mappers";
 
 export async function getIncidents(): Promise<Incident[]> {
-  return mockIncidents;
+  if (!IS_SUPABASE_CONFIGURED) return mockIncidents;
+  const { data, error } = await supabase
+    .from("incidents")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapIncident);
 }
 
 export async function getIncidentById(id: string): Promise<Incident | undefined> {
-  return mockIncidents.find((i) => i.id === id);
+  if (!IS_SUPABASE_CONFIGURED) return mockIncidents.find((i) => i.id === id);
+  const { data, error } = await supabase.from("incidents").select("*").eq("id", id).single();
+  if (error || !data) return undefined;
+  return mapIncident(data);
 }
 
 export async function getIncidentEvents(incidentId: string): Promise<IncidentEvent[]> {
-  return mockIncidentEvents.filter((e) => e.incidentId === incidentId);
+  if (!IS_SUPABASE_CONFIGURED) return mockIncidentEvents.filter((e) => e.incidentId === incidentId);
+  const { data, error } = await supabase
+    .from("incident_events")
+    .select("*")
+    .eq("incident_id", incidentId)
+    .order("date", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapIncidentEvent);
 }
 
 export async function getIncidentsByAssetId(assetId: string): Promise<Incident[]> {
-  return mockIncidents.filter((i) => i.assetId === assetId);
+  if (!IS_SUPABASE_CONFIGURED) return mockIncidents.filter((i) => i.assetId === assetId);
+  const { data, error } = await supabase
+    .from("incidents")
+    .select("*")
+    .eq("asset_id", assetId)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []).map(mapIncident);
 }

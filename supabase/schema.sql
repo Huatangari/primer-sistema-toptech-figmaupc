@@ -114,6 +114,29 @@ comment on table buildings is
   'Edificio gestionado. Eje del modelo multi-tenant futuro.';
 
 
+-- ── building_users ─────────────────────────────────────────────────────────
+-- Relación usuario ↔ edificio con rol. Eje del multi-tenant.
+-- Un usuario puede pertenecer a varios edificios con distintos roles.
+
+create type user_role as enum ('admin', 'technician', 'viewer');
+
+create table building_users (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid not null references auth.users(id) on delete cascade,
+  building_id  uuid not null references buildings(id) on delete cascade,
+  role         user_role not null default 'viewer',
+  created_at   timestamptz not null default now(),
+
+  unique (user_id, building_id)
+);
+
+create index idx_building_users_user      on building_users(user_id);
+create index idx_building_users_building  on building_users(building_id);
+
+comment on table building_users is
+  'Pertenencia de un usuario a un edificio con un rol (admin|technician|viewer).';
+
+
 -- ── providers ──────────────────────────────────────────────────────────────
 -- Provider interface — categories es una relación separada (ver provider_categories)
 
