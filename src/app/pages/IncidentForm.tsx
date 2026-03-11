@@ -110,10 +110,10 @@ export function IncidentForm() {
 
           {/* Priority */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <p id="priority-label" className="block text-sm font-medium text-gray-700 mb-1.5">
               Prioridad <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-4 gap-2">
+            </p>
+            <div className="grid grid-cols-4 gap-2" role="group" aria-labelledby="priority-label">
               {["Crítica", "Alta", "Media", "Baja"].map((p) => (
                 <button
                   key={p}
@@ -198,10 +198,11 @@ export function IncidentForm() {
 
           {/* Observations */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label htmlFor="observations" className="block text-sm font-medium text-gray-700 mb-1.5">
               Observaciones adicionales
             </label>
             <textarea
+              id="observations"
               rows={2}
               value={form.observations}
               onChange={(e) => setForm({ ...form, observations: e.target.value })}

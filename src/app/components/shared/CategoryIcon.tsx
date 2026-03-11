@@ -21,5 +21,5 @@ export function CategoryIcon({ category, size = 16 }: { category: string; size?:
     Internet: <Wifi size={size} />,
     "Áreas Comunes": <Building2 size={size} />,
   };
-  return <>{sized[category] || <Package size={size} />}</>;
+  return sized[category] || <Package size={size} />;
 }
