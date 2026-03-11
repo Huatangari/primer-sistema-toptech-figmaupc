@@ -86,6 +86,7 @@ export interface Document {
   expiresAt?: string;
   fileSize: string;
   fileType: string;
+  fileUrl?: string;   // URL al archivo real en Supabase Storage (null en mock)
   description: string;
   tags: string[];
 }

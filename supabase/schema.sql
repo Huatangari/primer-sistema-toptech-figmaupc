@@ -189,18 +189,20 @@ comment on table assets is
 
 -- ── asset_history ──────────────────────────────────────────────────────────
 -- AssetHistoryEvent interface
+-- building_id denormalizado para RLS directo (evita subquery sobre assets)
 
 create table asset_history (
-  id          uuid primary key default gen_random_uuid(),
-  asset_id    uuid not null references assets(id) on delete cascade,
+  id           uuid primary key default gen_random_uuid(),
+  asset_id     uuid not null references assets(id) on delete cascade,
+  building_id  uuid not null references buildings(id) on delete cascade,
 
-  date        timestamptz not null default now(),
-  type        asset_history_type not null,
-  title       text not null,
-  description text not null default '',
-  technician  text not null,
+  date         timestamptz not null default now(),
+  type         asset_history_type not null,
+  title        text not null,
+  description  text not null default '',
+  technician   text not null,
 
-  created_at  timestamptz not null default now()
+  created_at   timestamptz not null default now()
 );
 
 comment on table asset_history is
@@ -240,10 +242,12 @@ comment on table incidents is
 
 -- ── incident_events ────────────────────────────────────────────────────────
 -- IncidentEvent interface — timeline de cada incidencia
+-- building_id denormalizado para RLS directo (evita subquery sobre incidents)
 
 create table incident_events (
   id           uuid primary key default gen_random_uuid(),
   incident_id  uuid not null references incidents(id) on delete cascade,
+  building_id  uuid not null references buildings(id) on delete cascade,
 
   date         timestamptz not null default now(),
   type         incident_event_type not null,
@@ -301,8 +305,9 @@ create index idx_assets_status      on assets(status);
 create index idx_assets_next_maint  on assets(next_maintenance);
 
 -- asset_history
-create index idx_asset_history_asset  on asset_history(asset_id);
-create index idx_asset_history_date   on asset_history(date desc);
+create index idx_asset_history_asset     on asset_history(asset_id);
+create index idx_asset_history_building  on asset_history(building_id);
+create index idx_asset_history_date      on asset_history(date desc);
 
 -- incidents
 create index idx_incidents_building   on incidents(building_id);
@@ -313,6 +318,7 @@ create index idx_incidents_created    on incidents(created_at desc);
 
 -- incident_events
 create index idx_incident_events_incident  on incident_events(incident_id);
+create index idx_incident_events_building  on incident_events(building_id);
 create index idx_incident_events_date      on incident_events(date desc);
 
 -- documents
@@ -379,17 +385,19 @@ alter table incidents           enable row level security;
 alter table incident_events     enable row level security;
 alter table documents           enable row level security;
 
--- Política temporal de desarrollo: acceso total autenticado.
+-- Política temporal de desarrollo: acceso total (SELECT + INSERT + UPDATE + DELETE).
+-- USING     → aplica a SELECT, UPDATE, DELETE
+-- WITH CHECK → aplica a INSERT, UPDATE  (sin esto los INSERT fallan con 403)
 -- REEMPLAZAR antes de producción con políticas por building_id.
 
-create policy "dev_all_buildings"           on buildings           for all using (true);
-create policy "dev_all_providers"           on providers           for all using (true);
-create policy "dev_all_provider_categories" on provider_categories for all using (true);
-create policy "dev_all_assets"              on assets              for all using (true);
-create policy "dev_all_asset_history"       on asset_history       for all using (true);
-create policy "dev_all_incidents"           on incidents           for all using (true);
-create policy "dev_all_incident_events"     on incident_events     for all using (true);
-create policy "dev_all_documents"           on documents           for all using (true);
+create policy "dev_all_buildings"           on buildings           for all using (true) with check (true);
+create policy "dev_all_providers"           on providers           for all using (true) with check (true);
+create policy "dev_all_provider_categories" on provider_categories for all using (true) with check (true);
+create policy "dev_all_assets"              on assets              for all using (true) with check (true);
+create policy "dev_all_asset_history"       on asset_history       for all using (true) with check (true);
+create policy "dev_all_incidents"           on incidents           for all using (true) with check (true);
+create policy "dev_all_incident_events"     on incident_events     for all using (true) with check (true);
+create policy "dev_all_documents"           on documents           for all using (true) with check (true);
 
 
 -- =============================================================================
@@ -429,6 +437,7 @@ create policy "dev_all_documents"           on documents           for all using
 --   Document.expiresAt     → documents.expires_at
 --   Document.fileSize      → documents.file_size
 --   Document.fileType      → documents.file_type
+--   Document.fileUrl       → documents.file_url  (nuevo campo — URL en Supabase Storage)
 --   Provider.contactName   → providers.contact_name
 --   Provider.contactEmail  → providers.contact_email
 --   Provider.contactPhone  → providers.contact_phone
