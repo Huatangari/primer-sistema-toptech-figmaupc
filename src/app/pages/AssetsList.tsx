@@ -1,241 +1,232 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, ChangeEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { Search, Plus, Filter, ArrowRight, Package2 } from "lucide-react";
-import { AssetStatusBadge } from "../components/shared/StatusBadge";
-import { CategoryIcon } from "../components/shared/CategoryIcon";
+import { Search, Plus, Package2 } from "lucide-react";
 import { EmptyState } from "../components/shared/EmptyState";
 import { ErrorState } from "../components/shared/ErrorState";
+import { AssetRow } from "../components/assets/AssetRow";
+import { AssetsFilters } from "../components/assets/AssetsFilters";
 import { useData } from "../hooks/useData";
 import { getAssets } from "../../lib/services/assets";
-import { getCategoryColor, formatDate } from "../../lib/utils";
-import { Asset, AssetCategory, AssetStatus } from "../../lib/types";
+import type { Asset, AssetCategory, AssetStatus } from "../../lib/types";
+import styles from "./AssetsList.module.css";
 
-const CATEGORIES: (AssetCategory | "Todas")[] = [
-  "Todas",
-  "Ascensores",
-  "Extintores",
-  "CCTV",
-  "Sistema Eléctrico",
-  "Bombas de Agua",
-  "Alarmas CI",
-  "Internet",
-  "Áreas Comunes",
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+/** Status chips rendered in the summary bar with their dot color. */
+const STATUS_CHIPS: { status: AssetStatus; dotClass: string }[] = [
+  { status: "Operativo",       dotClass: "bg-emerald-500" },
+  { status: "En Mantenimiento", dotClass: "bg-amber-500"  },
+  { status: "Falla",           dotClass: "bg-red-500"     },
+  { status: "Vencido",         dotClass: "bg-red-500"     },
 ];
 
-const STATUSES: (AssetStatus | "Todos")[] = ["Todos", "Operativo", "En Mantenimiento", "Falla", "Vencido", "Inactivo"];
+// ─── Component ────────────────────────────────────────────────────────────────
 
+/**
+ * Assets list page.
+ * Orchestrates data fetching, filtering and delegates rendering to sub-components.
+ * No inline styles — all styling via AssetsList.module.css + Tailwind.
+ */
 export function AssetsList() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // ── Data ──────────────────────────────────────────────────────────────────
+
   const { data: assets, loading, error, refetch } = useData(getAssets, [] as Asset[]);
+
+  // ── Local state ───────────────────────────────────────────────────────────
+
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<AssetCategory | "Todas">(
-    (searchParams.get("categoria") as AssetCategory) || "Todas"
+    (searchParams.get("categoria") as AssetCategory | null) || "Todas"
   );
   const [statusFilter, setStatusFilter] = useState<AssetStatus | "Todos">("Todos");
 
+  // ── Derived state ─────────────────────────────────────────────────────────
+
   const filtered = useMemo(() => {
+    const lower = search.toLowerCase();
     return assets.filter((a) => {
       const matchSearch =
         !search ||
-        a.name.toLowerCase().includes(search.toLowerCase()) ||
-        a.code.toLowerCase().includes(search.toLowerCase()) ||
-        a.location.toLowerCase().includes(search.toLowerCase());
-      const matchCat = categoryFilter === "Todas" || a.category === categoryFilter;
-      const matchStatus = statusFilter === "Todos" || a.status === statusFilter;
+        a.name.toLowerCase().includes(lower) ||
+        a.code.toLowerCase().includes(lower) ||
+        a.location.toLowerCase().includes(lower);
+      const matchCat    = categoryFilter === "Todas" || a.category === categoryFilter;
+      const matchStatus = statusFilter   === "Todos" || a.status   === statusFilter;
       return matchSearch && matchCat && matchStatus;
     });
   }, [assets, search, categoryFilter, statusFilter]);
 
-  if (loading) return (
-    <div className="p-6 flex items-center justify-center h-64">
-      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-    </div>
+  /**
+   * Pre-computed count per status so STATUS_CHIPS rendering
+   * doesn't run filtered.filter() N times inside JSX.
+   */
+  const statusCounts = useMemo(
+    () =>
+      STATUS_CHIPS.reduce<Partial<Record<AssetStatus, number>>>((acc, { status }) => {
+        acc[status] = filtered.filter((a: Asset) => a.status === status).length;
+        return acc;
+      }, {}),
+    [filtered]
   );
+
+  // ── Stable callbacks ──────────────────────────────────────────────────────
+
+  const handleNavigate = useCallback(
+    (id: string) => navigate(`/activos/${id}`),
+    [navigate]
+  );
+
+  const handleStatusToggle = useCallback(
+    (s: AssetStatus) => setStatusFilter((prev: AssetStatus | "Todos") => (prev === s ? "Todos" : s)),
+    []
+  );
+
+  const handleClearFilters = useCallback(() => {
+    setSearch("");
+    setCategoryFilter("Todas");
+    setStatusFilter("Todos");
+  }, []);
+
+  // ── Guards ────────────────────────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div className={styles.loadingContainer}>
+        <div
+          className={styles.spinner}
+          role="status"
+          aria-label="Cargando activos"
+        />
+      </div>
+    );
+  }
+
   if (error) return <ErrorState message={error} onRetry={refetch} />;
 
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
-    <div className="p-6 space-y-5 max-w-screen-2xl mx-auto">
-      {/* Header actions */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3 flex-1 flex-wrap">
+    <div className={styles.container}>
+
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div className={styles.header}>
+        <div className={styles.searchAndFilters}>
+
           {/* Search */}
-          <div className="relative flex-1 min-w-48 max-w-sm">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className={styles.searchWrapper}>
+            <Search size={15} className={styles.searchIcon} aria-hidden="true" />
             <input
-              type="text"
+              type="search"
+              aria-label="Buscar activos por nombre, código o ubicación"
               placeholder="Buscar activo, código, ubicación..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm outline-none bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
+              className={styles.searchInput}
             />
           </div>
 
-          {/* Category filter */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <Filter size={14} className="text-gray-400" />
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value as AssetCategory | "Todas")}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white outline-none focus:border-blue-400 text-gray-700"
-            >
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as AssetStatus | "Todos")}
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white outline-none focus:border-blue-400 text-gray-700"
-            >
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
+          {/* Filters */}
+          <AssetsFilters
+            categoryFilter={categoryFilter}
+            statusFilter={statusFilter}
+            onCategoryChange={setCategoryFilter}
+            onStatusChange={setStatusFilter}
+          />
         </div>
 
         <button
+          type="button"
           onClick={() => alert("Función disponible en la versión completa")}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors flex-shrink-0"
-          style={{ fontWeight: 500 }}
+          className={styles.addButton}
         >
-          <Plus size={15} />
+          <Plus size={15} aria-hidden="true" />
           Nuevo Activo
         </button>
       </div>
 
-      {/* Stats row */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <span className="text-sm text-gray-500">
-          Mostrando <strong className="text-gray-700">{filtered.length}</strong> de <strong className="text-gray-700">{assets.length}</strong> activos
+      {/* ── Stats bar ───────────────────────────────────────────────────── */}
+      <div
+        className={styles.statsRow}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        aria-label={`Mostrando ${filtered.length} de ${assets.length} activos`}
+      >
+        <span className={styles.countText}>
+          Mostrando{" "}
+          <span className={styles.countValue}>{filtered.length}</span> de{" "}
+          <span className={styles.countValue}>{assets.length}</span> activos
         </span>
-        <div className="flex items-center gap-2 flex-wrap">
-          {(["Operativo", "En Mantenimiento", "Falla", "Vencido"] as AssetStatus[]).map((s) => {
-            const count = filtered.filter((a) => a.status === s).length;
+
+        <div className={styles.chips} role="group" aria-label="Filtrar por estado rápido">
+          {STATUS_CHIPS.map(({ status, dotClass }) => {
+            const count = statusCounts[status] ?? 0;
             if (count === 0) return null;
+            const isActive = statusFilter === status;
             return (
               <button
-                key={s}
-                onClick={() => setStatusFilter(statusFilter === s ? "Todos" : s)}
-                className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                  statusFilter === s ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                }`}
+                key={status}
+                type="button"
+                onClick={() => handleStatusToggle(status)}
+                aria-pressed={isActive ? "true" : "false"}
+                className={`${styles.chip} ${isActive ? styles.chipActive : styles.chipInactive}`}
               >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    s === "Operativo" ? "bg-emerald-500" : s === "En Mantenimiento" ? "bg-amber-500" : "bg-red-500"
-                  }`}
-                />
-                {s}: {count}
+                <span className={`${styles.chipDot} ${dotClass}`} aria-hidden="true" />
+                {status}: {count}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Table */}
+      {/* ── Table / Empty ───────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200">
+        <div className={styles.emptyWrapper}>
           <EmptyState
-            icon={<Package2 size={24} className="text-gray-400" />}
+            icon={<Package2 size={24} aria-hidden="true" />}
             title="Sin activos"
             description="No se encontraron activos con los filtros seleccionados."
             action={
-              <button onClick={() => { setSearch(""); setCategoryFilter("Todas"); setStatusFilter("Todos"); }} className="text-blue-600 text-sm">
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className={styles.clearFiltersButton}
+              >
                 Limpiar filtros
               </button>
             }
           />
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
+        <div className={styles.tableWrapper}>
+          <div className={styles.tableScroll}>
+            <table
+              className={styles.table}
+              aria-label="Listado de activos técnicos del edificio"
+            >
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="text-left px-5 py-3 text-xs text-gray-500 uppercase tracking-wide" style={{ fontWeight: 600 }}>
-                    Activo
+                <tr className={styles.tableHeadRow}>
+                  <th scope="col" className={styles.thFirst}>Activo</th>
+                  <th scope="col" className={`${styles.th} hidden sm:table-cell`}>Categoría</th>
+                  <th scope="col" className={`${styles.th} hidden md:table-cell`}>Ubicación</th>
+                  <th scope="col" className={styles.th}>Estado</th>
+                  <th scope="col" className={`${styles.th} hidden lg:table-cell`}>Último Mtto.</th>
+                  <th scope="col" className={`${styles.th} hidden lg:table-cell`}>Próximo Mtto.</th>
+                  <th scope="col" className={styles.thAction}>
+                    <span className="sr-only">Acciones</span>
                   </th>
-                  <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden sm:table-cell" style={{ fontWeight: 600 }}>
-                    Categoría
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden md:table-cell" style={{ fontWeight: 600 }}>
-                    Ubicación
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide" style={{ fontWeight: 600 }}>
-                    Estado
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden lg:table-cell" style={{ fontWeight: 600 }}>
-                    Último Mtto.
-                  </th>
-                  <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden lg:table-cell" style={{ fontWeight: 600 }}>
-                    Próximo Mtto.
-                  </th>
-                  <th className="px-4 py-3 w-12"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className={styles.tbody}>
                 {filtered.map((asset) => (
-                  <tr
+                  <AssetRow
                     key={asset.id}
-                    onClick={() => navigate(`/activos/${asset.id}`)}
-                    className="hover:bg-blue-50/40 cursor-pointer transition-colors"
-                  >
-                    <td className="px-5 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${getCategoryColor(asset.category)}`}>
-                          <CategoryIcon category={asset.category} size={15} />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-900" style={{ fontWeight: 500 }}>{asset.name}</p>
-                          <p className="text-xs text-gray-400">{asset.code}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5 hidden sm:table-cell">
-                      <span className={`text-xs px-2.5 py-1 rounded-full ${getCategoryColor(asset.category)}`} style={{ fontWeight: 500 }}>
-                        {asset.category}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 hidden md:table-cell">
-                      <p className="text-sm text-gray-600">{asset.location}</p>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <AssetStatusBadge status={asset.status} />
-                    </td>
-                    <td className="px-4 py-3.5 hidden lg:table-cell">
-                      <p className="text-sm text-gray-600">{formatDate(asset.lastMaintenance)}</p>
-                    </td>
-                    <td className="px-4 py-3.5 hidden lg:table-cell">
-                      {(() => {
-                        const next = new Date(asset.nextMaintenance);
-                        const now = new Date();
-                        const days = Math.ceil((next.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                        return (
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm text-gray-600">{formatDate(asset.nextMaintenance)}</p>
-                            {days <= 30 && days > 0 && (
-                              <span className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded" style={{ fontWeight: 500 }}>
-                                {days}d
-                              </span>
-                            )}
-                            {days <= 0 && (
-                              <span className="text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded" style={{ fontWeight: 500 }}>
-                                Vencido
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })()}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <button className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
-                        <ArrowRight size={15} />
-                      </button>
-                    </td>
-                  </tr>
+                    asset={asset}
+                    onClick={handleNavigate}
+                  />
                 ))}
               </tbody>
             </table>

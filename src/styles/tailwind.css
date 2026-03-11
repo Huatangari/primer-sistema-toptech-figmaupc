@@ -2,3 +2,31 @@
 @source '../**/*.{js,ts,jsx,tsx}';
 
 @import 'tw-animate-css';
+
+/*
+ * Tailwind v4 palette overrides — hex values for the 12 colors used via
+ * utility classes (bg-blue-600, text-gray-400, border-gray-200, etc.).
+ *
+ * WHY this is needed:
+ *   Tailwind v4 compiles utility classes as `var(--color-blue-600, oklch(...))`.
+ *   If the variable is NOT defined, every browser falls back to the inline oklch()
+ *   value — which Chrome < 111, Firefox < 113 and Edge < 111 cannot render.
+ *   Declaring these in @theme makes Tailwind emit `--color-blue-600: #2563eb` in
+ *   the :root block, so the var() resolves to hex on all browsers.
+ */
+@theme {
+  --color-blue-50:   #eff6ff;
+  --color-blue-100:  #dbeafe;
+  --color-blue-400:  #60a5fa;
+  --color-blue-600:  #2563eb;
+  --color-blue-700:  #1d4ed8;
+
+  --color-gray-50:   #f9fafb;
+  --color-gray-100:  #f3f4f6;
+  --color-gray-200:  #e5e7eb;
+  --color-gray-400:  #9ca3af;
+  --color-gray-500:  #6b7280;
+  --color-gray-600:  #4b5563;
+  --color-gray-700:  #374151;
+  --color-gray-900:  #111827;
+}

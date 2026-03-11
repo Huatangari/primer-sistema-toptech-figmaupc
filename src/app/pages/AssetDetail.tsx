@@ -60,11 +60,11 @@ export function AssetDetail() {
     return (
       <div className="p-6">
         <EmptyState
-          icon={<Package2 size={24} className="text-gray-400" />}
+          icon={<Package2 size={24} aria-hidden="true" />}
           title="Activo no encontrado"
           description="El activo solicitado no existe o fue eliminado."
           action={
-            <button onClick={() => navigate("/activos")} className="text-blue-600 text-sm">
+            <button type="button" onClick={() => navigate("/activos")} className="text-blue-600 text-sm">
               Volver a activos
             </button>
           }
@@ -85,6 +85,7 @@ export function AssetDetail() {
       {/* Back + Header */}
       <div>
         <button
+          type="button"
           onClick={() => navigate("/activos")}
           className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-4 transition-colors"
         >
@@ -99,12 +100,12 @@ export function AssetDetail() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <span className={`text-xs px-2 py-0.5 rounded-full ${getCategoryColor(asset.category)}`} style={{ fontWeight: 500 }}>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${getCategoryColor(asset.category)}`}>
                   {asset.category}
                 </span>
                 <span className="text-gray-400 text-sm">{asset.code}</span>
               </div>
-              <h2 className="text-gray-900 mb-1" style={{ fontSize: "20px", fontWeight: 700 }}>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">
                 {asset.name}
               </h2>
               <div className="flex items-center gap-1 text-gray-500 text-sm">
@@ -115,9 +116,9 @@ export function AssetDetail() {
             <div className="flex items-center gap-3">
               <AssetStatusBadge status={asset.status} />
               <button
+                type="button"
                 onClick={() => navigate("/incidencias/nueva")}
-                className="flex items-center gap-2 text-sm bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors"
-                style={{ fontWeight: 500 }}
+                className="flex items-center gap-2 text-sm font-medium bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors"
               >
                 <AlertTriangle size={14} />
                 Registrar Incidencia
@@ -131,28 +132,28 @@ export function AssetDetail() {
               <Calendar size={14} className="text-gray-400 flex-shrink-0" />
               <div>
                 <p className="text-xs text-gray-400">Instalación</p>
-                <p className="text-sm text-gray-700" style={{ fontWeight: 500 }}>{formatDate(asset.installationDate)}</p>
+                <p className="text-sm font-medium text-gray-700">{formatDate(asset.installationDate)}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Wrench size={14} className="text-gray-400 flex-shrink-0" />
               <div>
                 <p className="text-xs text-gray-400">Último Mtto.</p>
-                <p className="text-sm text-gray-700" style={{ fontWeight: 500 }}>{formatDate(asset.lastMaintenance)}</p>
+                <p className="text-sm font-medium text-gray-700">{formatDate(asset.lastMaintenance)}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Clock size={14} className="text-gray-400 flex-shrink-0" />
               <div>
                 <p className="text-xs text-gray-400">Próximo Mtto.</p>
-                <p className="text-sm text-gray-700" style={{ fontWeight: 500 }}>{formatDate(asset.nextMaintenance)}</p>
+                <p className="text-sm font-medium text-gray-700">{formatDate(asset.nextMaintenance)}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <AlertTriangle size={14} className="text-gray-400 flex-shrink-0" />
               <div>
                 <p className="text-xs text-gray-400">Incidencias</p>
-                <p className="text-sm text-gray-700" style={{ fontWeight: 500 }}>{assetIncidents.length} registradas</p>
+                <p className="text-sm font-medium text-gray-700">{assetIncidents.length} registradas</p>
               </div>
             </div>
           </div>
@@ -165,14 +166,14 @@ export function AssetDetail() {
         <div className="flex border-b border-gray-200 overflow-x-auto">
           {tabs.map((tab) => (
             <button
+              type="button"
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-5 py-3.5 text-sm flex-shrink-0 border-b-2 transition-colors ${
                 activeTab === tab.key
-                  ? "border-blue-600 text-blue-600 bg-blue-50/50"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                  ? "border-blue-600 text-blue-600 bg-blue-50/50 font-semibold"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50 font-normal"
               }`}
-              style={{ fontWeight: activeTab === tab.key ? 600 : 400 }}
             >
               {tab.label}
               {tab.count !== undefined && (
@@ -194,7 +195,7 @@ export function AssetDetail() {
           {activeTab === "resumen" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h4 className="text-gray-900" style={{ fontWeight: 600 }}>Información General</h4>
+                <h4 className="font-semibold text-gray-900">Información General</h4>
                 <div className="space-y-3">
                   {[
                     { label: "Nombre completo", value: asset.name, icon: <Tag size={14} /> },
@@ -219,7 +220,7 @@ export function AssetDetail() {
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-gray-900" style={{ fontWeight: 600 }}>Descripción y Notas</h4>
+                <h4 className="font-semibold text-gray-900">Descripción y Notas</h4>
                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
                   <p className="text-xs text-gray-400 mb-1">Descripción técnica</p>
                   <p className="text-sm text-gray-700">{asset.description}</p>
@@ -257,11 +258,12 @@ export function AssetDetail() {
             <div>
               {assetDocuments.length === 0 ? (
                 <EmptyState
-                  icon={<FileText size={24} className="text-gray-400" />}
+                  icon={<FileText size={24} aria-hidden="true" />}
                   title="Sin documentos"
                   description="No hay documentos vinculados a este activo."
                   action={
                     <button
+                      type="button"
                       onClick={() => navigate("/documentos")}
                       className="text-sm text-blue-600"
                     >
@@ -277,7 +279,7 @@ export function AssetDetail() {
                         <FileText size={18} className="text-red-600" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-800" style={{ fontWeight: 500 }}>{doc.name}</p>
+                        <p className="text-sm font-medium text-gray-800">{doc.name}</p>
                         <p className="text-xs text-gray-400">{doc.fileType} · {doc.fileSize} · Subido {formatDate(doc.uploadedAt)}</p>
                       </div>
                       <DocumentTypeBadge type={doc.type} />
@@ -293,7 +295,7 @@ export function AssetDetail() {
             <div>
               {assetIncidents.length === 0 ? (
                 <EmptyState
-                  icon={<AlertTriangle size={24} className="text-gray-400" />}
+                  icon={<AlertTriangle size={24} aria-hidden="true" />}
                   title="Sin incidencias"
                   description="No hay incidencias registradas para este activo."
                 />
@@ -310,7 +312,7 @@ export function AssetDetail() {
                           <span className="text-xs text-gray-400">{inc.code}</span>
                           <IncidentPriorityBadge priority={inc.priority} />
                         </div>
-                        <p className="text-sm text-gray-800" style={{ fontWeight: 500 }}>{inc.title}</p>
+                        <p className="text-sm font-medium text-gray-800">{inc.title}</p>
                         <p className="text-xs text-gray-400 mt-0.5">{timeAgo(inc.createdAt)}</p>
                       </div>
                       <IncidentStatusBadge status={inc.status} />

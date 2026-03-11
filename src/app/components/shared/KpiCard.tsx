@@ -1,4 +1,5 @@
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import styles from "./KpiCard.module.css";
 
 interface KpiCardProps {
   title: string;
@@ -55,7 +56,7 @@ export function KpiCard({
       </div>
       <div>
         <p className="text-gray-500 text-sm">{title}</p>
-        <p className="text-gray-900 mt-0.5" style={{ fontSize: "28px", fontWeight: 700, lineHeight: "1.2" }}>
+        <p className={styles.value}>
           {value}
         </p>
         {subtitle && <p className="text-gray-400 text-xs mt-1">{subtitle}</p>}

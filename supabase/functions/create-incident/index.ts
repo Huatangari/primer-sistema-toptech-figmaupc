@@ -7,7 +7,7 @@
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders, handleCors, jsonResponse } from "../_shared/cors.ts";
+import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { requireAuth, createServiceClient } from "../_shared/auth.ts";
 
 serve(async (req) => {

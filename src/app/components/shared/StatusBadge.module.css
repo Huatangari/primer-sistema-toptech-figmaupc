@@ -1,0 +1,121 @@
+/* StatusBadge Component Styles */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-2) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Asset Status Colors */
+
+.assetOperacionBg {
+  background-color: var(--color-success-50);
+}
+
+.assetOperacionText {
+  color: var(--color-success-600);
+}
+
+.assetMaintenanceBg {
+  background-color: var(--color-warning-50);
+}
+
+.assetMaintenanceText {
+  color: var(--color-warning-600);
+}
+
+.assetFailureBg {
+  background-color: var(--color-danger-50);
+}
+
+.assetFailureText {
+  color: var(--color-danger-600);
+}
+
+.assetExpiredBg {
+  background-color: var(--color-danger-50);
+}
+
+.assetExpiredText {
+  color: var(--color-danger-600);
+}
+
+.assetInactiveBg {
+  background-color: var(--color-gray-100);
+}
+
+.assetInactiveText {
+  color: var(--color-gray-600);
+}
+
+/* Incident Priority Colors */
+
+.priorityLowBg {
+  background-color: var(--color-info-50);
+}
+
+.priorityLowText {
+  color: var(--color-info-600);
+}
+
+.priorityMediumBg {
+  background-color: var(--color-warning-50);
+}
+
+.priorityMediumText {
+  color: var(--color-warning-600);
+}
+
+.priorityHighBg {
+  background-color: var(--color-danger-50);
+}
+
+.priorityHighText {
+  color: var(--color-danger-600);
+}
+
+/* Incident Status Colors */
+
+.statusOpenBg {
+  background-color: var(--color-primary-50);
+}
+
+.statusOpenText {
+  color: var(--color-primary-600);
+}
+
+.statusInProgressBg {
+  background-color: var(--color-warning-50);
+}
+
+.statusInProgressText {
+  color: var(--color-warning-600);
+}
+
+.statusCompletedBg {
+  background-color: var(--color-success-50);
+}
+
+.statusCompletedText {
+  color: var(--color-success-600);
+}
+
+.statusCancelledBg {
+  background-color: var(--color-gray-100);
+}
+
+.statusCancelledText {
+  color: var(--color-gray-600);
+}

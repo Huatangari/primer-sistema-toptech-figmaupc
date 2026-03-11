@@ -6,14 +6,16 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "generate:types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > src/lib/types/database.ts"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "lint:css": "stylelint 'src/**/*.css'",
+    "lint:css:fix": "stylelint 'src/**/*.css' --fix",
+    "lint:all": "npm run lint && npm run lint:css",
+    "lint:all:fix": "npm run lint:fix && npm run lint:css:fix",
+    "generate:types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > src/lib/types/database.ts",
+    "prepare": "husky"
   },
   "dependencies": {
-    "@emotion/react": "11.14.0",
-    "@emotion/styled": "11.14.1",
-    "@mui/icons-material": "7.3.5",
-    "@mui/material": "7.3.5",
-    "@popperjs/core": "2.11.8",
     "@radix-ui/react-accordion": "1.2.3",
     "@radix-ui/react-alert-dialog": "1.1.6",
     "@radix-ui/react-aspect-ratio": "1.1.2",
@@ -66,14 +68,35 @@
     "vaul": "1.1.2"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.4.3",
+    "@commitlint/config-conventional": "^20.4.3",
     "@tailwindcss/vite": "4.1.12",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "@typescript-eslint/eslint-plugin": "^8.57.0",
+    "@typescript-eslint/parser": "^8.57.0",
     "@vitejs/plugin-react": "4.7.0",
+    "eslint": "^9.39.4",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^17.4.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.3",
+    "postcss-preset-env": "^10.0.0",
+    "stylelint": "^17.4.0",
+    "stylelint-config-standard": "^40.0.0",
+    "stylelint-config-tailwindcss": "^1.0.1",
+    "stylelint-order": "^8.0.0",
     "tailwindcss": "4.1.12",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.57.0",
     "vite": "6.3.5"
   },
   "peerDependencies": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "peerDependenciesMeta": {
     "react": {
@@ -87,5 +110,13 @@
     "overrides": {
       "vite": "6.3.5"
     }
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "node --max-old-space-size=512 ./node_modules/.bin/eslint --max-warnings=0 --fix"
+    ],
+    "*.css": [
+      "stylelint --fix"
+    ]
   }
 }

@@ -8,7 +8,7 @@
  */
 
 import { supabase, IS_SUPABASE_CONFIGURED } from "../auth/authClient";
-import type { Incident, Asset, Document } from "../types";
+import type { Incident, Document } from "../types";
 import type { IncidentPriority } from "../types";
 
 // ─── Input types ─────────────────────────────────────────────────────────────

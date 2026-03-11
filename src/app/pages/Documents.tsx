@@ -61,7 +61,7 @@ export function Documents() {
                 : "border-gray-200 bg-white hover:bg-gray-50"
             }`}
           >
-            <p className="text-gray-900" style={{ fontSize: "22px", fontWeight: 700 }}>{count}</p>
+            <p className="text-[22px] font-bold text-gray-900">{count}</p>
             <p className="text-gray-500 text-xs mt-0.5">{type}</p>
           </button>
         ))}
@@ -81,8 +81,9 @@ export function Documents() {
             />
           </div>
           <div className="flex items-center gap-1.5">
-            <Filter size={14} className="text-gray-400" />
+            <Filter size={14} aria-hidden="true" />
             <select
+              title="Filtrar por tipo de documento"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as DocumentType | "Todos")}
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white outline-none text-gray-700"
@@ -94,8 +95,7 @@ export function Documents() {
 
         <button
           onClick={() => alert("Función disponible en la versión completa")}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors flex-shrink-0"
-          style={{ fontWeight: 500 }}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors flex-shrink-0"
         >
           <Upload size={15} />
           Subir Documento
@@ -109,7 +109,7 @@ export function Documents() {
           {filtered.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200">
               <EmptyState
-                icon={<FileText size={24} className="text-gray-400" />}
+                icon={<FileText size={24} aria-hidden="true" />}
                 title="Sin documentos"
                 description="No se encontraron documentos con los filtros seleccionados."
               />
@@ -120,11 +120,11 @@ export function Documents() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left px-5 py-3 text-xs text-gray-500 uppercase tracking-wide" style={{ fontWeight: 600 }}>Documento</th>
-                      <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide" style={{ fontWeight: 600 }}>Tipo</th>
-                      <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden md:table-cell" style={{ fontWeight: 600 }}>Vinculado a</th>
-                      <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden lg:table-cell" style={{ fontWeight: 600 }}>Fecha</th>
-                      <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden lg:table-cell" style={{ fontWeight: 600 }}>Vencimiento</th>
+                      <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Documento</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipo</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Vinculado a</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Fecha</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Vencimiento</th>
                       <th className="px-4 py-3 w-24"></th>
                     </tr>
                   </thead>
@@ -154,7 +154,7 @@ export function Documents() {
                                 <FileText size={16} className="text-red-600" />
                               </div>
                               <div>
-                                <p className="text-sm text-gray-800" style={{ fontWeight: 500 }}>{doc.name}</p>
+                                <p className="text-sm font-medium text-gray-800">{doc.name}</p>
                                 <p className="text-xs text-gray-400">{doc.fileType} · {doc.fileSize}</p>
                               </div>
                             </div>
@@ -171,10 +171,9 @@ export function Documents() {
                           <td className="px-4 py-3.5 hidden lg:table-cell">
                             {doc.expiresAt ? (
                               <span
-                                className={`text-xs px-2 py-0.5 rounded-full ${
+                                className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                                   isExpired ? "bg-red-100 text-red-600" : isExpiringSoon ? "bg-amber-100 text-amber-600" : "bg-gray-100 text-gray-600"
                                 }`}
-                                style={{ fontWeight: 500 }}
                               >
                                 {isExpired ? "Vencido" : formatDate(doc.expiresAt)}
                               </span>
@@ -184,11 +183,11 @@ export function Documents() {
                           </td>
                           <td className="px-4 py-3.5">
                             <div className="flex items-center gap-1">
-                              <button className="p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
-                                <Eye size={14} />
+                              <button type="button" aria-label="Ver documento" className="p-1.5 rounded text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                                <Eye size={14} aria-hidden="true" />
                               </button>
-                              <button className="p-1.5 rounded text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors">
-                                <Download size={14} />
+                              <button type="button" aria-label="Descargar documento" className="p-1.5 rounded text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors">
+                                <Download size={14} aria-hidden="true" />
                               </button>
                             </div>
                           </td>
@@ -209,11 +208,11 @@ export function Documents() {
               <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
                 <FileText size={22} className="text-red-600" />
               </div>
-              <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600 text-lg">×</button>
+              <button type="button" onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600 text-lg">×</button>
             </div>
 
             <div>
-              <h3 className="text-gray-900" style={{ fontWeight: 600, fontSize: "15px" }}>{selectedDoc.name}</h3>
+              <h3 className="text-[15px] font-semibold text-gray-900">{selectedDoc.name}</h3>
               <p className="text-gray-500 text-sm mt-1">{selectedDoc.description}</p>
             </div>
 
@@ -253,11 +252,11 @@ export function Documents() {
             )}
 
             <div className="pt-3 border-t border-gray-100 space-y-2">
-              <button className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-lg transition-colors" style={{ fontWeight: 500 }}>
+              <button type="button" className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg transition-colors">
                 <Eye size={14} />
                 Ver documento
               </button>
-              <button className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm py-2.5 rounded-lg transition-colors">
+              <button type="button" className="w-full flex items-center justify-center gap-2 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm py-2.5 rounded-lg transition-colors">
                 <Download size={14} />
                 Descargar
               </button>

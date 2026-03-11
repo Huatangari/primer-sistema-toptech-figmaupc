@@ -11,6 +11,17 @@ const sections = [
   { key: "datos" as Section, label: "Datos y Exportación", icon: <Database size={16} /> },
 ];
 
+const BUILDING_FIELDS = [
+  { id: "building-name",    label: "Nombre del edificio",       value: "Torres del Parque",   type: "text"   },
+  { id: "building-address", label: "Dirección",                  value: "Av. Libertador 1450", type: "text"   },
+  { id: "building-city",    label: "Ciudad",                     value: "Buenos Aires",        type: "text"   },
+  { id: "building-country", label: "País",                       value: "Argentina",           type: "text"   },
+  { id: "building-floors",  label: "Total de pisos",             value: "14",                  type: "number" },
+  { id: "building-units",   label: "Total de unidades",          value: "87",                  type: "number" },
+  { id: "building-year",    label: "Año de construcción",        value: "2017",                type: "number" },
+  { id: "building-admin",   label: "Administrador responsable",  value: "Admin Edificio",      type: "text"   },
+];
+
 function SaveButton({ onClick }: { onClick: () => void }) {
   const [saved, setSaved] = useState(false);
 
@@ -22,14 +33,36 @@ function SaveButton({ onClick }: { onClick: () => void }) {
 
   return (
     <button
+      type="button"
       onClick={handleClick}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all ${
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
         saved ? "bg-emerald-600 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
       }`}
-      style={{ fontWeight: 600 }}
     >
       {saved ? <Check size={15} /> : <Save size={15} />}
       {saved ? "Guardado" : "Guardar cambios"}
+    </button>
+  );
+}
+
+function Toggle({ defaultEnabled }: { defaultEnabled: boolean }) {
+  const [enabled, setEnabled] = useState(defaultEnabled);
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={enabled ? "true" : "false"}
+      aria-label={enabled ? "Desactivar notificación" : "Activar notificación"}
+      onClick={() => setEnabled(!enabled)}
+      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${
+        enabled ? "bg-blue-600" : "bg-gray-200"
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 mt-0.5 ${
+          enabled ? "translate-x-4" : "translate-x-0.5"
+        }`}
+      />
     </button>
   );
 }
@@ -46,13 +79,13 @@ export function Settings() {
             {sections.map((s) => (
               <button
                 key={s.key}
+                type="button"
                 onClick={() => setActiveSection(s.key)}
                 className={`w-full flex items-center gap-3 px-4 py-3 text-sm border-b border-gray-50 last:border-0 transition-colors ${
                   activeSection === s.key
-                    ? "bg-blue-50 text-blue-700 border-l-2 border-l-blue-600"
+                    ? "bg-blue-50 text-blue-700 font-medium border-l-2 border-l-blue-600"
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
-                style={{ fontWeight: activeSection === s.key ? 600 : 400 }}
               >
                 <span className={activeSection === s.key ? "text-blue-600" : "text-gray-400"}>{s.icon}</span>
                 {s.label}
@@ -68,28 +101,20 @@ export function Settings() {
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "16px" }}>Datos del Edificio</h3>
+                  <h3 className="text-base font-bold text-gray-900">Datos del Edificio</h3>
                   <p className="text-gray-500 text-sm mt-0.5">Información general del edificio gestionado</p>
                 </div>
                 <SaveButton onClick={() => {}} />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {[
-                  { label: "Nombre del edificio", value: "Torres del Parque", type: "text" },
-                  { label: "Dirección", value: "Av. Libertador 1450", type: "text" },
-                  { label: "Ciudad", value: "Buenos Aires", type: "text" },
-                  { label: "País", value: "Argentina", type: "text" },
-                  { label: "Total de pisos", value: "14", type: "number" },
-                  { label: "Total de unidades", value: "87", type: "number" },
-                  { label: "Año de construcción", value: "2017", type: "number" },
-                  { label: "Administrador responsable", value: "Admin Edificio", type: "text" },
-                ].map((field) => (
-                  <div key={field.label}>
-                    <label className="block text-sm text-gray-700 mb-1.5" style={{ fontWeight: 500 }}>
+                {BUILDING_FIELDS.map((field) => (
+                  <div key={field.id}>
+                    <label htmlFor={field.id} className="block text-sm font-medium text-gray-700 mb-1.5">
                       {field.label}
                     </label>
                     <input
+                      id={field.id}
                       type={field.type}
                       defaultValue={field.value}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-100 text-gray-700"
@@ -105,7 +130,7 @@ export function Settings() {
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "16px" }}>Configuración de Notificaciones</h3>
+                  <h3 className="text-base font-bold text-gray-900">Configuración de Notificaciones</h3>
                   <p className="text-gray-500 text-sm mt-0.5">Gestiona qué alertas recibir y por qué canal</p>
                 </div>
                 <SaveButton onClick={() => {}} />
@@ -122,7 +147,7 @@ export function Settings() {
                 ].map((notif) => (
                   <div key={notif.label} className="flex items-center justify-between p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
                     <div>
-                      <p className="text-sm text-gray-800" style={{ fontWeight: 500 }}>{notif.label}</p>
+                      <p className="text-sm font-medium text-gray-800">{notif.label}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{notif.desc}</p>
                     </div>
                     <Toggle defaultEnabled={notif.enabled} />
@@ -137,10 +162,10 @@ export function Settings() {
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "16px" }}>Usuarios y Roles</h3>
+                  <h3 className="text-base font-bold text-gray-900">Usuarios y Roles</h3>
                   <p className="text-gray-500 text-sm mt-0.5">Gestiona el acceso al sistema</p>
                 </div>
-                <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg" style={{ fontWeight: 500 }}>
+                <button type="button" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg">
                   <Users size={14} />
                   Invitar usuario
                 </button>
@@ -155,20 +180,20 @@ export function Settings() {
                 ].map((user) => (
                   <div key={user.email} className="flex items-center gap-4 p-4 rounded-xl border border-gray-100">
                     <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                      <span className="text-white text-sm" style={{ fontWeight: 600 }}>{user.name.charAt(0)}</span>
+                      <span className="text-white text-sm font-semibold">{user.name.charAt(0)}</span>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-800" style={{ fontWeight: 500 }}>{user.name}</p>
+                      <p className="text-sm font-medium text-gray-800">{user.name}</p>
                       <p className="text-xs text-gray-400">{user.email}</p>
                     </div>
-                    <span className={`text-xs px-2.5 py-1 rounded-full ${
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
                       user.role === "Administrador" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-600"
-                    }`} style={{ fontWeight: 500 }}>
+                    }`}>
                       {user.role}
                     </span>
-                    <span className={`text-xs px-2.5 py-1 rounded-full hidden sm:inline ${
+                    <span className={`text-xs font-medium px-2.5 py-1 rounded-full hidden sm:inline ${
                       user.status === "Activo" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
-                    }`} style={{ fontWeight: 500 }}>
+                    }`}>
                       {user.status}
                     </span>
                   </div>
@@ -182,7 +207,7 @@ export function Settings() {
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "16px" }}>Apariencia del sistema</h3>
+                  <h3 className="text-base font-bold text-gray-900">Apariencia del sistema</h3>
                   <p className="text-gray-500 text-sm mt-0.5">Personalización visual del dashboard</p>
                 </div>
                 <SaveButton onClick={() => {}} />
@@ -190,21 +215,23 @@ export function Settings() {
 
               <div className="space-y-6">
                 <div>
-                  <p className="text-sm text-gray-700 mb-3" style={{ fontWeight: 500 }}>Color principal</p>
-                  <div className="flex gap-3 flex-wrap">
-                    {["#2563eb", "#7c3aed", "#059669", "#dc2626", "#d97706", "#0891b2"].map((color) => (
-                      <button
-                        key={color}
-                        className={`w-10 h-10 rounded-xl border-4 transition-all ${color === "#2563eb" ? "border-gray-900 scale-110" : "border-transparent"}`}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
+                  <p className="text-sm font-medium text-gray-700 mb-3">Color principal</p>
+                  <div className="flex gap-3 flex-wrap" role="group" aria-label="Seleccionar color principal">
+                    <button type="button" aria-label="Color Azul"    aria-pressed="true"  className="w-10 h-10 rounded-xl border-4 transition-all bg-[#2563eb] border-gray-900 scale-110" />
+                    <button type="button" aria-label="Color Violeta" aria-pressed="false" className="w-10 h-10 rounded-xl border-4 transition-all bg-[#7c3aed] border-transparent" />
+                    <button type="button" aria-label="Color Verde"   aria-pressed="false" className="w-10 h-10 rounded-xl border-4 transition-all bg-[#059669] border-transparent" />
+                    <button type="button" aria-label="Color Rojo"    aria-pressed="false" className="w-10 h-10 rounded-xl border-4 transition-all bg-[#dc2626] border-transparent" />
+                    <button type="button" aria-label="Color Ámbar"   aria-pressed="false" className="w-10 h-10 rounded-xl border-4 transition-all bg-[#d97706] border-transparent" />
+                    <button type="button" aria-label="Color Cian"    aria-pressed="false" className="w-10 h-10 rounded-xl border-4 transition-all bg-[#0891b2] border-transparent" />
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-700 mb-3" style={{ fontWeight: 500 }}>Nombre del sistema</p>
+                  <label htmlFor="system-name" className="block text-sm font-medium text-gray-700 mb-3">
+                    Nombre del sistema
+                  </label>
                   <input
+                    id="system-name"
                     type="text"
                     defaultValue="BuildTrack"
                     className="w-full max-w-xs border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none bg-white focus:border-blue-400 text-gray-700"
@@ -212,8 +239,13 @@ export function Settings() {
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-700 mb-1" style={{ fontWeight: 500 }}>Zona horaria</p>
-                  <select className="w-full max-w-xs border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none text-gray-700">
+                  <label htmlFor="timezone" className="block text-sm font-medium text-gray-700 mb-1">
+                    Zona horaria
+                  </label>
+                  <select
+                    id="timezone"
+                    className="w-full max-w-xs border border-gray-200 rounded-lg px-3 py-2.5 text-sm bg-white outline-none text-gray-700"
+                  >
                     <option>America/Argentina/Buenos_Aires (UTC-3)</option>
                     <option>America/Santiago (UTC-4)</option>
                     <option>America/Bogota (UTC-5)</option>
@@ -227,7 +259,7 @@ export function Settings() {
           {activeSection === "datos" && (
             <div className="space-y-5">
               <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <h3 className="text-gray-900 mb-4" style={{ fontWeight: 700, fontSize: "16px" }}>Exportación de datos</h3>
+                <h3 className="text-base font-bold text-gray-900 mb-4">Exportación de datos</h3>
                 <div className="space-y-3">
                   {[
                     { label: "Exportar activos", desc: "Descarga el inventario completo en formato Excel o CSV" },
@@ -236,10 +268,11 @@ export function Settings() {
                   ].map((item) => (
                     <div key={item.label} className="flex items-center justify-between p-4 rounded-xl border border-gray-100">
                       <div>
-                        <p className="text-sm text-gray-800" style={{ fontWeight: 500 }}>{item.label}</p>
+                        <p className="text-sm font-medium text-gray-800">{item.label}</p>
                         <p className="text-xs text-gray-400">{item.desc}</p>
                       </div>
                       <button
+                        type="button"
                         onClick={() => alert("Función disponible en la versión completa")}
                         className="text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
                       >
@@ -252,12 +285,12 @@ export function Settings() {
               </div>
 
               <div className="bg-red-50 rounded-xl border border-red-200 p-5">
-                <h4 className="text-red-800 mb-1" style={{ fontWeight: 600 }}>Zona de peligro</h4>
+                <h4 className="text-red-800 font-semibold mb-1">Zona de peligro</h4>
                 <p className="text-red-600 text-sm mb-3">Estas acciones son irreversibles. Procede con cuidado.</p>
                 <button
+                  type="button"
                   onClick={() => alert("Función disponible en la versión completa")}
-                  className="text-sm bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-                  style={{ fontWeight: 500 }}
+                  className="text-sm font-medium bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
                 >
                   Restablecer demo
                 </button>
@@ -267,23 +300,5 @@ export function Settings() {
         </div>
       </div>
     </div>
-  );
-}
-
-function Toggle({ defaultEnabled }: { defaultEnabled: boolean }) {
-  const [enabled, setEnabled] = useState(defaultEnabled);
-  return (
-    <button
-      onClick={() => setEnabled(!enabled)}
-      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${
-        enabled ? "bg-blue-600" : "bg-gray-200"
-      }`}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 mt-0.5 ${
-          enabled ? "translate-x-4" : "translate-x-0.5"
-        }`}
-      />
-    </button>
   );
 }

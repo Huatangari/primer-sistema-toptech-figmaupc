@@ -44,7 +44,7 @@ export function IncidentForm() {
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-emerald-600" />
           </div>
-          <h3 className="text-gray-900 mb-2" style={{ fontWeight: 700, fontSize: "20px" }}>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">
             Incidencia registrada
           </h3>
           <p className="text-gray-500 text-sm">Redirigiendo al listado...</p>
@@ -56,6 +56,7 @@ export function IncidentForm() {
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-5">
       <button
+        type="button"
         onClick={() => navigate("/incidencias")}
         className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
       >
@@ -65,17 +66,18 @@ export function IncidentForm() {
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-6 py-5 border-b border-gray-100 bg-gray-50">
-          <h2 className="text-gray-900" style={{ fontWeight: 700, fontSize: "18px" }}>Registrar Nueva Incidencia</h2>
+          <h2 className="text-lg font-bold text-gray-900">Registrar Nueva Incidencia</h2>
           <p className="text-gray-500 text-sm mt-0.5">Documenta la falla o evento para su seguimiento</p>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Asset */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1.5" style={{ fontWeight: 500 }}>
+            <label htmlFor="assetId" className="block text-sm font-medium text-gray-700 mb-1.5">
               Activo relacionado <span className="text-red-500">*</span>
             </label>
             <select
+              id="assetId"
               required
               value={form.assetId}
               onChange={(e) => setForm({ ...form, assetId: e.target.value })}
@@ -92,10 +94,11 @@ export function IncidentForm() {
 
           {/* Title */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1.5" style={{ fontWeight: 500 }}>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1.5">
               Título de la incidencia <span className="text-red-500">*</span>
             </label>
             <input
+              id="title"
               required
               type="text"
               value={form.title}
@@ -107,16 +110,18 @@ export function IncidentForm() {
 
           {/* Priority */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1.5" style={{ fontWeight: 500 }}>
+            <p id="priority-label" className="block text-sm font-medium text-gray-700 mb-1.5">
               Prioridad <span className="text-red-500">*</span>
-            </label>
-            <div className="grid grid-cols-4 gap-2">
+            </p>
+            <div className="grid grid-cols-4 gap-2" role="group" aria-labelledby="priority-label">
               {["Crítica", "Alta", "Media", "Baja"].map((p) => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => setForm({ ...form, priority: p })}
                   className={`py-2 rounded-lg text-sm border transition-all ${
+                    form.priority === p ? "font-semibold" : "font-normal"
+                  } ${
                     form.priority === p
                       ? p === "Crítica"
                         ? "bg-red-600 border-red-600 text-white"
@@ -127,7 +132,6 @@ export function IncidentForm() {
                         : "bg-blue-500 border-blue-500 text-white"
                       : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
                   }`}
-                  style={{ fontWeight: form.priority === p ? 600 : 400 }}
                 >
                   {p}
                 </button>
@@ -137,10 +141,11 @@ export function IncidentForm() {
 
           {/* Description */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1.5" style={{ fontWeight: 500 }}>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1.5">
               Descripción detallada <span className="text-red-500">*</span>
             </label>
             <textarea
+              id="description"
               required
               rows={4}
               value={form.description}
@@ -152,7 +157,7 @@ export function IncidentForm() {
 
           {/* Evidence upload */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1.5" style={{ fontWeight: 500 }}>
+            <label htmlFor="evidence" className="block text-sm font-medium text-gray-700 mb-1.5">
               Evidencia fotográfica
             </label>
 
@@ -161,10 +166,11 @@ export function IncidentForm() {
                 <img src={imagePreview} alt="Preview" className="w-40 h-40 object-cover rounded-lg border border-gray-200" />
                 <button
                   type="button"
+                  aria-label="Quitar imagen"
                   onClick={() => { setImagePreview(null); if (fileRef.current) fileRef.current.value = ""; }}
                   className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center"
                 >
-                  <X size={12} />
+                  <X size={12} aria-hidden="true" />
                 </button>
               </div>
             ) : (
@@ -175,12 +181,13 @@ export function IncidentForm() {
                 <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <Camera size={20} className="text-gray-400" />
                 </div>
-                <p className="text-sm text-gray-600 mb-1" style={{ fontWeight: 500 }}>Adjuntar fotografía</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">Adjuntar fotografía</p>
                 <p className="text-xs text-gray-400">Arrastra una imagen o haz clic para seleccionar</p>
                 <p className="text-xs text-gray-300 mt-1">JPG, PNG hasta 10 MB</p>
               </div>
             )}
             <input
+              id="evidence"
               ref={fileRef}
               type="file"
               accept="image/*"
@@ -191,10 +198,11 @@ export function IncidentForm() {
 
           {/* Observations */}
           <div>
-            <label className="block text-sm text-gray-700 mb-1.5" style={{ fontWeight: 500 }}>
+            <label htmlFor="observations" className="block text-sm font-medium text-gray-700 mb-1.5">
               Observaciones adicionales
             </label>
             <textarea
+              id="observations"
               rows={2}
               value={form.observations}
               onChange={(e) => setForm({ ...form, observations: e.target.value })}
@@ -214,8 +222,7 @@ export function IncidentForm() {
             </button>
             <button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
-              style={{ fontWeight: 600 }}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
             >
               <Upload size={15} />
               Registrar Incidencia

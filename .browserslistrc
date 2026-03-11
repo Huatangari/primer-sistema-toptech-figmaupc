@@ -1,0 +1,22 @@
+# Browser compatibility targets
+# Read by: @tailwindcss/vite (Lightning CSS), postcss-preset-env, browserslist tooling
+#
+# WHY these specific minimums:
+#   chrome >= 100  → Chrome 100-110 lacks oklch → Lightning CSS generates hex fallbacks
+#                    Chrome 100+ uses text-size-adjust (no -webkit prefix)
+#   firefox >= 102 → Firefox 102-112 lacks oklch → hex fallbacks generated
+#   safari >= 15.4 → Uses -webkit-text-size-adjust; oklch added in Safari 15.4
+#   edge >= 100    → Edge 100-110 lacks oklch → hex fallbacks generated
+#
+# Result: Lightning CSS will emit hex fallbacks BEFORE oklch() values in the build,
+# resolving the Microsoft Edge Tools "not supported by Chrome < 111" warnings.
+
+chrome >= 100
+firefox >= 102
+safari >= 15.4
+ios_saf >= 15.4
+edge >= 100
+samsung >= 17
+
+not dead
+not ie > 0

@@ -1,0 +1,41 @@
+/* EmptyState Component Styles */
+
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl) var(--spacing-lg);
+  text-align: center;
+}
+
+.iconWrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-2xl);
+  background-color: var(--color-gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--spacing-lg);
+  color: var(--color-gray-400);
+}
+
+.title {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray-900);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.description {
+  font-size: var(--font-size-base);
+  color: var(--color-gray-500);
+  margin: 0 auto var(--spacing-lg);
+  max-width: 400px;
+  line-height: var(--line-height-normal);
+}
+
+.action {
+  margin-top: var(--spacing-md);
+}

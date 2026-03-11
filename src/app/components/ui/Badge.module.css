@@ -1,0 +1,70 @@
+/* Badge Component Styles */
+
+.base {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-2) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+/* Color Variants */
+
+.primary {
+  background-color: var(--color-primary-50);
+  color: var(--color-primary-900);
+}
+
+.secondary {
+  background-color: var(--color-secondary-100);
+  color: var(--color-secondary-700);
+}
+
+.success {
+  background-color: var(--color-success-50);
+  color: var(--color-success-600);
+}
+
+.warning {
+  background-color: var(--color-warning-50);
+  color: var(--color-warning-600);
+}
+
+.danger {
+  background-color: var(--color-danger-50);
+  color: var(--color-danger-600);
+}
+
+.info {
+  background-color: var(--color-info-50);
+  color: var(--color-info-600);
+}
+
+.gray {
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-700);
+}
+
+/* Dot Indicator */
+
+.dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+/* Outline variant */
+
+.outline {
+  background-color: transparent;
+  border: 1px solid;
+}
+
+.outlinePrimary {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}

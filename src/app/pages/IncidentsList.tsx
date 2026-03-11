@@ -58,15 +58,14 @@ export function IncidentsList() {
         <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
           <AlertTriangle size={18} className="text-red-600 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-sm text-red-800" style={{ fontWeight: 600 }}>
+            <p className="text-sm font-semibold text-red-800">
               {criticalCount} incidencia{criticalCount > 1 ? "s" : ""} crítica{criticalCount > 1 ? "s" : ""} pendiente{criticalCount > 1 ? "s" : ""}
             </p>
             <p className="text-xs text-red-600">Requieren atención inmediata</p>
           </div>
           <button
             onClick={() => setPriorityFilter("Crítica")}
-            className="text-xs text-red-600 border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors flex-shrink-0"
-            style={{ fontWeight: 500 }}
+            className="text-xs font-medium text-red-600 border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors flex-shrink-0"
           >
             Ver críticas
           </button>
@@ -87,8 +86,9 @@ export function IncidentsList() {
             />
           </div>
           <div className="flex items-center gap-1.5 flex-wrap">
-            <Filter size={14} className="text-gray-400" />
+            <Filter size={14} aria-hidden="true" />
             <select
+              title="Filtrar por estado"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as IncidentStatus | "Todos")}
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white outline-none text-gray-700"
@@ -96,6 +96,7 @@ export function IncidentsList() {
               {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
             <select
+              title="Filtrar por prioridad"
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value as IncidentPriority | "Todas")}
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white outline-none text-gray-700"
@@ -107,8 +108,7 @@ export function IncidentsList() {
 
         <button
           onClick={() => navigate("/incidencias/nueva")}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors flex-shrink-0"
-          style={{ fontWeight: 500 }}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors flex-shrink-0"
         >
           <Plus size={15} />
           Registrar Incidencia
@@ -124,7 +124,7 @@ export function IncidentsList() {
           { label: "Abiertas", count: openCount, color: "bg-red-100 text-red-700" },
           { label: "En Proceso", count: inProcessCount, color: "bg-blue-100 text-blue-700" },
         ].map((chip) => (
-          <span key={chip.label} className={`text-xs px-2.5 py-1 rounded-full ${chip.color}`} style={{ fontWeight: 500 }}>
+          <span key={chip.label} className={`text-xs font-medium px-2.5 py-1 rounded-full ${chip.color}`}>
             {chip.count} {chip.label}
           </span>
         ))}
@@ -134,7 +134,7 @@ export function IncidentsList() {
       {filtered.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200">
           <EmptyState
-            icon={<AlertTriangle size={24} className="text-gray-400" />}
+            icon={<AlertTriangle size={24} aria-hidden="true" />}
             title="Sin incidencias"
             description="No se encontraron incidencias con los filtros seleccionados."
           />
@@ -145,12 +145,12 @@ export function IncidentsList() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="text-left px-5 py-3 text-xs text-gray-500 uppercase tracking-wide" style={{ fontWeight: 600 }}>Incidencia</th>
-                  <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden md:table-cell" style={{ fontWeight: 600 }}>Activo</th>
-                  <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide" style={{ fontWeight: 600 }}>Prioridad</th>
-                  <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide" style={{ fontWeight: 600 }}>Estado</th>
-                  <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden lg:table-cell" style={{ fontWeight: 600 }}>Fecha</th>
-                  <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden sm:table-cell" style={{ fontWeight: 600 }}>Responsable</th>
+                  <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Incidencia</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Activo</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Prioridad</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Fecha</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Responsable</th>
                   <th className="px-4 py-3 w-12"></th>
                 </tr>
               </thead>
@@ -170,7 +170,7 @@ export function IncidentsList() {
                           )}
                           <div>
                             <p className="text-xs text-gray-400 mb-0.5">{inc.code}</p>
-                            <p className="text-sm text-gray-800" style={{ fontWeight: 500 }}>{inc.title}</p>
+                            <p className="text-sm font-medium text-gray-800">{inc.title}</p>
                             <p className="text-xs text-gray-400 mt-0.5">{timeAgo(inc.createdAt)}</p>
                           </div>
                         </div>
@@ -192,8 +192,8 @@ export function IncidentsList() {
                         <p className="text-sm text-gray-600">{inc.assignedTo || <span className="text-gray-300">Sin asignar</span>}</p>
                       </td>
                       <td className="px-4 py-3.5">
-                        <button className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
-                          <ArrowRight size={15} />
+                        <button type="button" aria-label="Ver detalle de incidencia" className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                          <ArrowRight size={15} aria-hidden="true" />
                         </button>
                       </td>
                     </tr>

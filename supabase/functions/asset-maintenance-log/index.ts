@@ -15,7 +15,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return handleCors();
 
   try {
-    const { user, client } = await requireAuth(req);
+    const { client } = await requireAuth(req);
     const { asset_id, type, title, description, technician, next_maintenance } = await req.json();
 
     if (!asset_id || !type || !title || !technician) {
