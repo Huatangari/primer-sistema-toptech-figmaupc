@@ -1,17 +1,14 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, Upload, X, Camera, CheckCircle } from "lucide-react";
+import { useData } from "../hooks/useData";
 import { getAssets } from "../../lib/services/assets";
 import { Asset } from "../../lib/types";
 
 export function IncidentForm() {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
-  const [assets, setAssets] = useState<Asset[]>([]);
-
-  useEffect(() => {
-    getAssets().then(setAssets);
-  }, []);
+  const { data: assets } = useData(getAssets, [] as Asset[]);
 
   const [form, setForm] = useState({
     assetId: "",

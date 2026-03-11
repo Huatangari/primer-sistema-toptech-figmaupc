@@ -1,9 +1,11 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Search, Plus, Filter, ArrowRight, Package2 } from "lucide-react";
 import { AssetStatusBadge } from "../components/shared/StatusBadge";
 import { CategoryIcon } from "../components/shared/CategoryIcon";
 import { EmptyState } from "../components/shared/EmptyState";
+import { ErrorState } from "../components/shared/ErrorState";
+import { useData } from "../hooks/useData";
 import { getAssets } from "../../lib/services/assets";
 import { getCategoryColor, formatDate } from "../../lib/utils";
 import { Asset, AssetCategory, AssetStatus } from "../../lib/types";
@@ -25,17 +27,12 @@ const STATUSES: (AssetStatus | "Todos")[] = ["Todos", "Operativo", "En Mantenimi
 export function AssetsList() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: assets, loading, error, refetch } = useData(getAssets, [] as Asset[]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<AssetCategory | "Todas">(
     (searchParams.get("categoria") as AssetCategory) || "Todas"
   );
   const [statusFilter, setStatusFilter] = useState<AssetStatus | "Todos">("Todos");
-
-  useEffect(() => {
-    getAssets().then((data) => { setAssets(data); setLoading(false); });
-  }, []);
 
   const filtered = useMemo(() => {
     return assets.filter((a) => {
@@ -50,13 +47,12 @@ export function AssetsList() {
     });
   }, [assets, search, categoryFilter, statusFilter]);
 
-  if (loading) {
-    return (
-      <div className="p-6 flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="p-6 flex items-center justify-center h-64">
+      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
 
   return (
     <div className="p-6 space-y-5 max-w-screen-2xl mx-auto">

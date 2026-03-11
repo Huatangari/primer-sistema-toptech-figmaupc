@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { ArrowLeft, Camera, MessageSquare, CheckCircle, XCircle, AlertTriangle, User, Calendar } from "lucide-react";
 import { IncidentPriorityBadge, IncidentStatusBadge, AssetStatusBadge } from "../components/shared/StatusBadge";
 import { CategoryIcon } from "../components/shared/CategoryIcon";
 import { Timeline } from "../components/shared/Timeline";
 import { EmptyState } from "../components/shared/EmptyState";
+import { ErrorState } from "../components/shared/ErrorState";
+import { useData } from "../hooks/useData";
 import { getIncidentById, getIncidentEvents } from "../../lib/services/incidents";
 import { getAssetById } from "../../lib/services/assets";
 import { getCategoryColor, formatDate, formatDateTime } from "../../lib/utils";
@@ -15,31 +17,24 @@ export function IncidentDetail() {
   const navigate = useNavigate();
   const [comment, setComment] = useState("");
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
-  const [incident, setIncident] = useState<Incident | undefined>();
-  const [asset, setAsset] = useState<Asset | undefined>();
-  const [events, setEvents] = useState<IncidentEvent[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!id) return;
-    getIncidentById(id).then(async (inc) => {
-      setIncident(inc);
-      if (inc) {
-        const [a, evts] = await Promise.all([getAssetById(inc.assetId), getIncidentEvents(id)]);
-        setAsset(a);
-        setEvents(evts);
-      }
-      setLoading(false);
-    });
-  }, [id]);
+  const { data: { incident, asset, events }, loading, error, refetch } = useData(
+    async () => {
+      const incident = await getIncidentById(id!);
+      if (!incident) return { incident: undefined, asset: undefined, events: [] as IncidentEvent[] };
+      const [asset, events] = await Promise.all([getAssetById(incident.assetId), getIncidentEvents(id!)]);
+      return { incident, asset, events };
+    },
+    { incident: undefined as Incident | undefined, asset: undefined as Asset | undefined, events: [] as IncidentEvent[] },
+    id
+  );
 
-  if (loading) {
-    return (
-      <div className="p-6 flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="p-6 flex items-center justify-center h-64">
+      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
 
   if (!incident) {
     return (

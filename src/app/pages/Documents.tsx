@@ -1,7 +1,9 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Search, Filter, Upload, FileText, Download, Eye, Calendar, Tag } from "lucide-react";
 import { DocumentTypeBadge } from "../components/shared/StatusBadge";
 import { EmptyState } from "../components/shared/EmptyState";
+import { ErrorState } from "../components/shared/ErrorState";
+import { useData } from "../hooks/useData";
 import { getDocuments } from "../../lib/services/documents";
 import { getAssets } from "../../lib/services/assets";
 import { getProviders } from "../../lib/services/providers";
@@ -11,22 +13,14 @@ import { Asset, Document, DocumentType, Provider } from "../../lib/types";
 const DOC_TYPES: (DocumentType | "Todos")[] = ["Todos", "Manual", "Certificado", "Contrato", "Informe Técnico", "Plano"];
 
 export function Documents() {
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [providers, setProviders] = useState<Provider[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: { documents, assets, providers }, loading, error, refetch } = useData(
+    () => Promise.all([getDocuments(), getAssets(), getProviders()])
+      .then(([documents, assets, providers]) => ({ documents, assets, providers })),
+    { documents: [] as Document[], assets: [] as Asset[], providers: [] as Provider[] }
+  );
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<DocumentType | "Todos">("Todos");
   const [selected, setSelected] = useState<string | null>(null);
-
-  useEffect(() => {
-    Promise.all([getDocuments(), getAssets(), getProviders()]).then(([docs, a, p]) => {
-      setDocuments(docs);
-      setAssets(a);
-      setProviders(p);
-      setLoading(false);
-    });
-  }, []);
 
   const filtered = useMemo(() => {
     return documents.filter((d) => {
@@ -46,13 +40,12 @@ export function Documents() {
     count: documents.filter((d) => d.type === type).length,
   }));
 
-  if (loading) {
-    return (
-      <div className="p-6 flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="p-6 flex items-center justify-center h-64">
+      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
 
   return (
     <div className="p-6 space-y-5 max-w-screen-2xl mx-auto">

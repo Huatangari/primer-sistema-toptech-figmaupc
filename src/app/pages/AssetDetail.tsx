@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import {
   ArrowLeft,
@@ -16,7 +16,9 @@ import { AssetStatusBadge, DocumentTypeBadge, IncidentPriorityBadge, IncidentSta
 import { CategoryIcon } from "../components/shared/CategoryIcon";
 import { Timeline } from "../components/shared/Timeline";
 import { EmptyState } from "../components/shared/EmptyState";
-import { getAssetById, getAssetHistory, getAssetsByProviderId } from "../../lib/services/assets";
+import { ErrorState } from "../components/shared/ErrorState";
+import { useData } from "../hooks/useData";
+import { getAssetById, getAssetHistory } from "../../lib/services/assets";
 import { getIncidentsByAssetId } from "../../lib/services/incidents";
 import { getDocumentsByAssetId } from "../../lib/services/documents";
 import { getCategoryColor, formatDate, timeAgo } from "../../lib/utils";
@@ -28,35 +30,31 @@ export function AssetDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("resumen");
-  const [asset, setAsset] = useState<Asset | undefined>();
-  const [assetHistory, setAssetHistory] = useState<AssetHistoryEvent[]>([]);
-  const [assetIncidents, setAssetIncidents] = useState<Incident[]>([]);
-  const [assetDocuments, setAssetDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!id) return;
-    Promise.all([
-      getAssetById(id),
-      getAssetHistory(id),
-      getIncidentsByAssetId(id),
-      getDocumentsByAssetId(id),
-    ]).then(([a, history, incidents, documents]) => {
-      setAsset(a);
-      setAssetHistory(history);
-      setAssetIncidents(incidents);
-      setAssetDocuments(documents);
-      setLoading(false);
-    });
-  }, [id]);
+  const { data: { asset, assetHistory, assetIncidents, assetDocuments }, loading, error, refetch } = useData(
+    () => Promise.all([
+      getAssetById(id!),
+      getAssetHistory(id!),
+      getIncidentsByAssetId(id!),
+      getDocumentsByAssetId(id!),
+    ]).then(([asset, assetHistory, assetIncidents, assetDocuments]) => ({
+      asset, assetHistory, assetIncidents, assetDocuments,
+    })),
+    {
+      asset: undefined as Asset | undefined,
+      assetHistory: [] as AssetHistoryEvent[],
+      assetIncidents: [] as Incident[],
+      assetDocuments: [] as Document[],
+    },
+    id
+  );
 
-  if (loading) {
-    return (
-      <div className="p-6 flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="p-6 flex items-center justify-center h-64">
+      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
 
   if (!asset) {
     return (

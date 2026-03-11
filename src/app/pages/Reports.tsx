@@ -1,6 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from "recharts";
 import { FileText, Download, BarChart3, PieChartIcon, TrendingUp, Package2, AlertTriangle, CheckCircle } from "lucide-react";
+import { ErrorState } from "../components/shared/ErrorState";
+import { useData } from "../hooks/useData";
 import { getAssets } from "../../lib/services/assets";
 import { getIncidents } from "../../lib/services/incidents";
 import { getDocuments } from "../../lib/services/documents";
@@ -14,19 +16,11 @@ const CATEGORIES: AssetCategory[] = [
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#f97316", "#84cc16"];
 
 export function Reports() {
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    Promise.all([getAssets(), getIncidents(), getDocuments()]).then(([a, i, d]) => {
-      setAssets(a);
-      setIncidents(i);
-      setDocuments(d);
-      setLoading(false);
-    });
-  }, []);
+  const { data: { assets, incidents, documents }, loading, error, refetch } = useData(
+    () => Promise.all([getAssets(), getIncidents(), getDocuments()])
+      .then(([assets, incidents, documents]) => ({ assets, incidents, documents })),
+    { assets: [] as Asset[], incidents: [] as Incident[], documents: [] as Document[] }
+  );
 
   // Asset by category
   const assetsByCategory = useMemo(() => CATEGORIES.map((cat) => ({
@@ -72,13 +66,12 @@ export function Reports() {
     { name: "Plano", value: documents.filter((d) => d.type === "Plano").length },
   ], [documents]);
 
-  if (loading) {
-    return (
-      <div className="p-6 flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="p-6 flex items-center justify-center h-64">
+      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
 
   const reportTypes = [
     { icon: <Package2 size={20} className="text-blue-600" />, iconBg: "bg-blue-100", title: "Activos Registrados", desc: "Inventario completo por categoría y estado", badge: "PDF · Excel" },

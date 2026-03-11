@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router";
 import {
   Package2,
@@ -15,6 +15,8 @@ import { RadialBarChart, RadialBar, ResponsiveContainer, Tooltip } from "rechart
 import { KpiCard } from "../components/shared/KpiCard";
 import { AssetStatusBadge, IncidentPriorityBadge, IncidentStatusBadge } from "../components/shared/StatusBadge";
 import { CategoryIcon } from "../components/shared/CategoryIcon";
+import { ErrorState } from "../components/shared/ErrorState";
+import { useData } from "../hooks/useData";
 import { getAssets } from "../../lib/services/assets";
 import { getIncidents } from "../../lib/services/incidents";
 import { getCategoryColor, formatDate, timeAgo } from "../../lib/utils";
@@ -33,17 +35,12 @@ const CATEGORIES: AssetCategory[] = [
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    Promise.all([getAssets(), getIncidents()]).then(([a, i]) => {
-      setAssets(a);
-      setIncidents(i);
-      setLoading(false);
-    });
-  }, []);
+  const { data: { assets, incidents }, loading, error, refetch } = useData(
+    () => Promise.all([getAssets(), getIncidents()])
+      .then(([assets, incidents]) => ({ assets, incidents })),
+    { assets: [] as Asset[], incidents: [] as Incident[] }
+  );
 
   // KPI calculations
   const totalAssets = assets.length;
@@ -72,13 +69,12 @@ export function Dashboard() {
     (a) => a.status === "Falla" || a.status === "Vencido" || a.status === "En Mantenimiento"
   ).slice(0, 4);
 
-  if (loading) {
-    return (
-      <div className="p-6 flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="p-6 flex items-center justify-center h-64">
+      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
 
   return (
     <div className="p-6 space-y-6 max-w-screen-2xl mx-auto">

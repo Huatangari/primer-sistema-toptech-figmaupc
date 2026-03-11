@@ -1,27 +1,23 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Search, Plus, Star, Phone, Mail, ArrowRight, Users } from "lucide-react";
 import { ProviderStatusBadge } from "../components/shared/StatusBadge";
 import { CategoryIcon } from "../components/shared/CategoryIcon";
 import { EmptyState } from "../components/shared/EmptyState";
+import { ErrorState } from "../components/shared/ErrorState";
+import { useData } from "../hooks/useData";
 import { getProviders } from "../../lib/services/providers";
 import { getAssets } from "../../lib/services/assets";
 import { getCategoryColor, formatDate } from "../../lib/utils";
 import { Asset, Provider } from "../../lib/types";
 
 export function Providers() {
-  const [providers, setProviders] = useState<Provider[]>([]);
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: { providers, assets }, loading, error, refetch } = useData(
+    () => Promise.all([getProviders(), getAssets()])
+      .then(([providers, assets]) => ({ providers, assets })),
+    { providers: [] as Provider[], assets: [] as Asset[] }
+  );
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
-
-  useEffect(() => {
-    Promise.all([getProviders(), getAssets()]).then(([p, a]) => {
-      setProviders(p);
-      setAssets(a);
-      setLoading(false);
-    });
-  }, []);
 
   const filtered = useMemo(() => {
     return providers.filter((p) =>
@@ -34,13 +30,12 @@ export function Providers() {
 
   const selectedProvider = providers.find((p) => p.id === selected);
 
-  if (loading) {
-    return (
-      <div className="p-6 flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="p-6 flex items-center justify-center h-64">
+      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
 
   return (
     <div className="p-6 space-y-5 max-w-screen-2xl mx-auto">

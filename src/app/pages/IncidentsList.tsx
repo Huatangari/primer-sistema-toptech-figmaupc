@@ -1,8 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { Search, Plus, Filter, ArrowRight, AlertTriangle } from "lucide-react";
 import { IncidentPriorityBadge, IncidentStatusBadge } from "../components/shared/StatusBadge";
 import { EmptyState } from "../components/shared/EmptyState";
+import { ErrorState } from "../components/shared/ErrorState";
+import { useData } from "../hooks/useData";
 import { getIncidents } from "../../lib/services/incidents";
 import { getAssets } from "../../lib/services/assets";
 import { formatDate, timeAgo } from "../../lib/utils";
@@ -13,20 +15,14 @@ const PRIORITIES: (IncidentPriority | "Todas")[] = ["Todas", "Crítica", "Alta",
 
 export function IncidentsList() {
   const navigate = useNavigate();
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: { incidents, assets }, loading, error, refetch } = useData(
+    () => Promise.all([getIncidents(), getAssets()])
+      .then(([incidents, assets]) => ({ incidents, assets })),
+    { incidents: [] as Incident[], assets: [] as Asset[] }
+  );
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<IncidentStatus | "Todos">("Todos");
   const [priorityFilter, setPriorityFilter] = useState<IncidentPriority | "Todas">("Todas");
-
-  useEffect(() => {
-    Promise.all([getIncidents(), getAssets()]).then(([i, a]) => {
-      setIncidents(i);
-      setAssets(a);
-      setLoading(false);
-    });
-  }, []);
 
   const filtered = useMemo(() => {
     return incidents
@@ -48,13 +44,12 @@ export function IncidentsList() {
   const inProcessCount = incidents.filter((i) => i.status === "En Proceso").length;
   const criticalCount = incidents.filter((i) => i.priority === "Crítica" && i.status !== "Cerrada").length;
 
-  if (loading) {
-    return (
-      <div className="p-6 flex items-center justify-center h-64">
-        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="p-6 flex items-center justify-center h-64">
+      <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+  if (error) return <ErrorState message={error} onRetry={refetch} />;
 
   return (
     <div className="p-6 space-y-5 max-w-screen-2xl mx-auto">
