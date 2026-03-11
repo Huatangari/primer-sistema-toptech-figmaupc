@@ -53,8 +53,7 @@ export function Providers() {
         </div>
         <button
           onClick={() => alert("Función disponible en la versión completa")}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors flex-shrink-0"
-          style={{ fontWeight: 500 }}
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors flex-shrink-0"
         >
           <Plus size={15} />
           Nuevo Proveedor
@@ -69,7 +68,7 @@ export function Providers() {
           { label: "Pend. Evaluación", value: providers.filter((p) => p.status === "Pendiente Evaluación").length, color: "text-amber-600" },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-4">
-            <p className={s.color} style={{ fontSize: "24px", fontWeight: 700 }}>{s.value}</p>
+            <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
             <p className="text-gray-500 text-xs mt-0.5">{s.label}</p>
           </div>
         ))}
@@ -81,7 +80,7 @@ export function Providers() {
           {filtered.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200">
               <EmptyState
-                icon={<Users size={24} className="text-gray-400" />}
+                icon={<Users size={24} aria-hidden="true" />}
                 title="Sin proveedores"
                 description="No se encontraron proveedores."
               />
@@ -92,12 +91,12 @@ export function Providers() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50">
-                      <th className="text-left px-5 py-3 text-xs text-gray-500 uppercase tracking-wide" style={{ fontWeight: 600 }}>Proveedor</th>
-                      <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden sm:table-cell" style={{ fontWeight: 600 }}>Rubro</th>
-                      <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden md:table-cell" style={{ fontWeight: 600 }}>Contacto</th>
-                      <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden lg:table-cell" style={{ fontWeight: 600 }}>Último Servicio</th>
-                      <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide" style={{ fontWeight: 600 }}>Estado</th>
-                      <th className="text-left px-4 py-3 text-xs text-gray-500 uppercase tracking-wide hidden sm:table-cell" style={{ fontWeight: 600 }}>Rating</th>
+                      <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Proveedor</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Rubro</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">Contacto</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">Último Servicio</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Estado</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden sm:table-cell">Rating</th>
                       <th className="px-4 py-3 w-12"></th>
                     </tr>
                   </thead>
@@ -113,12 +112,12 @@ export function Providers() {
                         <td className="px-5 py-3.5">
                           <div className="flex items-center gap-3">
                             <div className="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
-                              <span className="text-white text-sm" style={{ fontWeight: 600 }}>
+                              <span className="text-white text-sm font-semibold">
                                 {prov.name.charAt(0)}
                               </span>
                             </div>
                             <div>
-                              <p className="text-sm text-gray-800" style={{ fontWeight: 500 }}>{prov.name}</p>
+                              <p className="text-sm font-medium text-gray-800">{prov.name}</p>
                               {prov.contractType && (
                                 <p className="text-xs text-gray-400">{prov.contractType}</p>
                               )}
@@ -129,7 +128,7 @@ export function Providers() {
                           <p className="text-sm text-gray-600">{prov.rubro}</p>
                         </td>
                         <td className="px-4 py-3.5 hidden md:table-cell">
-                          <p className="text-sm text-gray-700" style={{ fontWeight: 500 }}>{prov.contactName}</p>
+                          <p className="text-sm font-medium text-gray-700">{prov.contactName}</p>
                           <p className="text-xs text-gray-400">{prov.contactPhone}</p>
                         </td>
                         <td className="px-4 py-3.5 hidden lg:table-cell">
@@ -141,12 +140,12 @@ export function Providers() {
                         <td className="px-4 py-3.5 hidden sm:table-cell">
                           <div className="flex items-center gap-1">
                             <Star size={13} className="text-amber-400 fill-amber-400" />
-                            <span className="text-sm text-gray-700" style={{ fontWeight: 500 }}>{prov.rating}</span>
+                            <span className="text-sm font-medium text-gray-700">{prov.rating}</span>
                           </div>
                         </td>
                         <td className="px-4 py-3.5">
-                          <button className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
-                            <ArrowRight size={15} />
+                          <button type="button" aria-label="Ver detalle del proveedor" className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                            <ArrowRight size={15} aria-hidden="true" />
                           </button>
                         </td>
                       </tr>
@@ -163,15 +162,15 @@ export function Providers() {
           <div className="xl:w-80 bg-white rounded-xl border border-gray-200 p-5 space-y-5 flex-shrink-0">
             <div className="flex items-start justify-between">
               <div className="w-14 h-14 rounded-xl bg-slate-700 flex items-center justify-center">
-                <span className="text-white" style={{ fontSize: "24px", fontWeight: 700 }}>
+                <span className="text-2xl font-bold text-white">
                   {selectedProvider.name.charAt(0)}
                 </span>
               </div>
-              <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600 text-lg">×</button>
+              <button type="button" onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600 text-lg">×</button>
             </div>
 
             <div>
-              <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "16px" }}>{selectedProvider.name}</h3>
+              <h3 className="text-base font-bold text-gray-900">{selectedProvider.name}</h3>
               <p className="text-gray-500 text-sm mt-0.5">{selectedProvider.rubro}</p>
               <div className="flex items-center gap-1 mt-1">
                 {[1, 2, 3, 4, 5].map((s) => (
@@ -240,10 +239,10 @@ export function Providers() {
             </div>
 
             <div className="pt-3 border-t border-gray-100 space-y-2">
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 rounded-lg transition-colors" style={{ fontWeight: 500 }}>
+              <button type="button" className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2.5 rounded-lg transition-colors">
                 Contactar proveedor
               </button>
-              <button className="w-full border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm py-2.5 rounded-lg transition-colors">
+              <button type="button" className="w-full border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm py-2.5 rounded-lg transition-colors">
                 Ver historial de servicios
               </button>
             </div>

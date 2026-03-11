@@ -1,5 +1,6 @@
 import { Wrench, AlertTriangle, Package, Eye, RefreshCw, MessageSquare, CheckCircle, XCircle, UserPlus, PlusCircle } from "lucide-react";
 import { formatDate, formatDateTime } from "../../../lib/utils";
+import styles from "./Timeline.module.css";
 
 type EventType =
   | "Mantenimiento"
@@ -72,7 +73,7 @@ export function Timeline({ events, dateFormat = "date" }: TimelineProps) {
                   </div>
                   <div className="min-w-0 flex-1 pt-0.5">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <p className="text-sm text-gray-900" style={{ fontWeight: 500 }}>{event.title}</p>
+                      <p className={styles.eventTitle}>{event.title}</p>
                       <span className="text-xs text-gray-400 flex-shrink-0">
                         {dateFormat === "datetime" ? formatDateTime(event.date) : formatDate(event.date)}
                       </span>

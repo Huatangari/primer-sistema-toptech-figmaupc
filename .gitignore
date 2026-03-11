@@ -31,7 +31,8 @@ coverage/
 *.lcov
 
 # Editor directories
-.vscode/settings.json
+# .vscode/settings.json is COMMITTED — contains project-wide settings
+# (Tailwind CSS validation, dist exclusion, formatter config)
 .vscode/launch.json
 .vscode/extensions.json
 .idea/

@@ -1,0 +1,89 @@
+/* Timeline Component Styles */
+
+.root {
+  display: flow-root;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  margin-bottom: calc(var(--spacing-xl) * -1);
+}
+
+.item {
+  position: relative;
+  padding-bottom: var(--spacing-xl);
+}
+
+.connector {
+  position: absolute;
+  left: var(--spacing-md);
+  top: var(--spacing-2xl);
+  width: 2px;
+  height: 100%;
+  background-color: var(--color-gray-200);
+  margin-left: -1px;
+}
+
+.iconContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--color-gray-0);
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+  background-color: var(--color-gray-100);
+  color: var(--color-gray-600);
+}
+
+.eventContent {
+  margin-left: var(--spacing-lg);
+  padding-top: var(--spacing-xs);
+}
+
+.eventHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.eventTitle {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-gray-900);
+  margin: 0;
+}
+
+.eventDate {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.eventDescription {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-600);
+  margin: var(--spacing-sm) 0 0 0;
+}
+
+.eventMeta {
+  font-size: var(--font-size-xs);
+  color: var(--color-gray-400);
+  margin-top: var(--spacing-sm);
+}
+
+.emptyMessage {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--color-gray-400);
+  font-size: var(--font-size-sm);
+}

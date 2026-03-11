@@ -1,0 +1,55 @@
+/* Card Component Styles */
+
+.root {
+  background-color: var(--color-gray-0);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.root:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.header {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--color-gray-100);
+  background-color: var(--color-gray-50);
+}
+
+.body {
+  padding: var(--spacing-lg);
+}
+
+.footer {
+  padding: var(--spacing-lg);
+  border-top: 1px solid var(--color-gray-100);
+  background-color: var(--color-gray-50);
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: flex-end;
+}
+
+/* Variants */
+
+.interactive {
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.interactive:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+}
+
+.flat {
+  box-shadow: none;
+  border: none;
+  background-color: var(--color-gray-50);
+}
+
+.elevated {
+  box-shadow: var(--shadow-md);
+  border: none;
+}

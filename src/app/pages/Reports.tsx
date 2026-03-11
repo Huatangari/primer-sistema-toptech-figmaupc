@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from "recharts";
-import { FileText, Download, BarChart3, PieChartIcon, TrendingUp, Package2, AlertTriangle, CheckCircle } from "lucide-react";
+import { FileText, Download, BarChart3, TrendingUp, Package2, AlertTriangle, CheckCircle } from "lucide-react";
 import { ErrorState } from "../components/shared/ErrorState";
 import { useData } from "../hooks/useData";
 import { getAssets } from "../../lib/services/assets";
@@ -31,20 +31,20 @@ export function Reports() {
     falla: assets.filter((a) => a.category === cat && (a.status === "Falla" || a.status === "Vencido")).length,
   })).filter((c) => c.total > 0), [assets]);
 
-  // Asset status distribution
+  // Asset status distribution — color kept for recharts Cell fill, dotClass for legend UI
   const assetStatusData = useMemo(() => [
-    { name: "Operativo", value: assets.filter((a) => a.status === "Operativo").length, color: "#10b981" },
-    { name: "En Mantención", value: assets.filter((a) => a.status === "En Mantenimiento").length, color: "#f59e0b" },
-    { name: "Falla", value: assets.filter((a) => a.status === "Falla").length, color: "#ef4444" },
-    { name: "Vencido", value: assets.filter((a) => a.status === "Vencido").length, color: "#dc2626" },
+    { name: "Operativo",     value: assets.filter((a) => a.status === "Operativo").length,        color: "#10b981", dotClass: "bg-emerald-500" },
+    { name: "En Mantención", value: assets.filter((a) => a.status === "En Mantenimiento").length, color: "#f59e0b", dotClass: "bg-amber-500"   },
+    { name: "Falla",         value: assets.filter((a) => a.status === "Falla").length,            color: "#ef4444", dotClass: "bg-red-500"     },
+    { name: "Vencido",       value: assets.filter((a) => a.status === "Vencido").length,          color: "#dc2626", dotClass: "bg-red-600"     },
   ].filter((d) => d.value > 0), [assets]);
 
-  // Incidents by priority
+  // Incidents by priority — Tailwind classes replace dynamic color inline styles
   const incidentsByPriority = useMemo(() => [
-    { name: "Crítica", value: incidents.filter((i) => i.priority === "Crítica").length, color: "#ef4444" },
-    { name: "Alta", value: incidents.filter((i) => i.priority === "Alta").length, color: "#f97316" },
-    { name: "Media", value: incidents.filter((i) => i.priority === "Media").length, color: "#f59e0b" },
-    { name: "Baja", value: incidents.filter((i) => i.priority === "Baja").length, color: "#3b82f6" },
+    { name: "Crítica", value: incidents.filter((i) => i.priority === "Crítica").length, textClass: "text-red-500",    bgClass: "bg-red-500/[.12]"    },
+    { name: "Alta",    value: incidents.filter((i) => i.priority === "Alta").length,    textClass: "text-orange-500", bgClass: "bg-orange-500/[.12]" },
+    { name: "Media",   value: incidents.filter((i) => i.priority === "Media").length,   textClass: "text-amber-500",  bgClass: "bg-amber-500/[.12]"  },
+    { name: "Baja",    value: incidents.filter((i) => i.priority === "Baja").length,    textClass: "text-blue-500",   bgClass: "bg-blue-500/[.12]"   },
   ], [incidents]);
 
   // Incidents by month (simulated)
@@ -87,8 +87,8 @@ export function Reports() {
       {/* Report types */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-gray-900" style={{ fontWeight: 700, fontSize: "16px" }}>Tipos de Reportes Disponibles</h3>
-          <span className="text-xs text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full" style={{ fontWeight: 500 }}>
+          <h3 className="text-base font-bold text-gray-900">Tipos de Reportes Disponibles</h3>
+          <span className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
             Exportación disponible en versión completa
           </span>
         </div>
@@ -104,9 +104,9 @@ export function Reports() {
                 </div>
                 <span className="text-xs text-gray-400 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded-full">{r.badge}</span>
               </div>
-              <h4 className="text-gray-900 mb-1" style={{ fontWeight: 600 }}>{r.title}</h4>
+              <h4 className="font-semibold text-gray-900 mb-1">{r.title}</h4>
               <p className="text-gray-500 text-sm">{r.desc}</p>
-              <button className="mt-3 flex items-center gap-1.5 text-blue-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity" style={{ fontWeight: 500 }}>
+              <button type="button" className="mt-3 flex items-center gap-1.5 text-blue-600 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                 <Download size={12} />
                 Generar reporte
               </button>
@@ -119,7 +119,7 @@ export function Reports() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Assets by category */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="text-gray-900 mb-1" style={{ fontWeight: 600 }}>Activos por Categoría</h3>
+          <h3 className="font-semibold text-gray-900 mb-1">Activos por Categoría</h3>
           <p className="text-gray-400 text-sm mb-4">Distribución y estado operativo</p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={assetsByCategory} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
@@ -138,7 +138,7 @@ export function Reports() {
 
         {/* Incidents by month */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="text-gray-900 mb-1" style={{ fontWeight: 600 }}>Incidencias por Mes</h3>
+          <h3 className="font-semibold text-gray-900 mb-1">Incidencias por Mes</h3>
           <p className="text-gray-400 text-sm mb-4">Registradas vs. resueltas (últimos 6 meses)</p>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={incidentsByMonth} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
@@ -155,7 +155,7 @@ export function Reports() {
 
         {/* Asset status pie */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="text-gray-900 mb-1" style={{ fontWeight: 600 }}>Estado de Activos</h3>
+          <h3 className="font-semibold text-gray-900 mb-1">Estado de Activos</h3>
           <p className="text-gray-400 text-sm mb-4">Distribución por estado operativo</p>
           <div className="flex items-center gap-6">
             <ResponsiveContainer width={160} height={160}>
@@ -180,10 +180,10 @@ export function Reports() {
               {assetStatusData.map((d) => (
                 <div key={d.name} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: d.color }} />
+                    <div className={`w-2.5 h-2.5 rounded-full ${d.dotClass}`} />
                     <span className="text-sm text-gray-600">{d.name}</span>
                   </div>
-                  <span className="text-sm text-gray-900" style={{ fontWeight: 600 }}>{d.value}</span>
+                  <span className="text-sm font-semibold text-gray-900">{d.value}</span>
                 </div>
               ))}
             </div>
@@ -192,7 +192,7 @@ export function Reports() {
 
         {/* Documents by type */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <h3 className="text-gray-900 mb-1" style={{ fontWeight: 600 }}>Documentos por Tipo</h3>
+          <h3 className="font-semibold text-gray-900 mb-1">Documentos por Tipo</h3>
           <p className="text-gray-400 text-sm mb-4">Repositorio documental clasificado</p>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={docsByType} layout="vertical" margin={{ top: 0, right: 0, left: 40, bottom: 0 }}>
@@ -212,15 +212,15 @@ export function Reports() {
 
       {/* Incidents by priority */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h3 className="text-gray-900 mb-4" style={{ fontWeight: 600 }}>Resumen de Incidencias por Prioridad</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">Resumen de Incidencias por Prioridad</h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {incidentsByPriority.map((p) => (
             <div key={p.name} className="text-center p-4 rounded-xl border border-gray-100 bg-gray-50">
-              <div className="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center" style={{ backgroundColor: p.color + "20" }}>
-                <AlertTriangle size={18} style={{ color: p.color }} />
+              <div className={`w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center ${p.bgClass}`}>
+                <AlertTriangle size={18} className={p.textClass} aria-hidden="true" />
               </div>
-              <p className="text-gray-900" style={{ fontSize: "26px", fontWeight: 700 }}>{p.value}</p>
-              <p className="text-sm" style={{ color: p.color, fontWeight: 600 }}>{p.name}</p>
+              <p className="text-[26px] font-bold text-gray-900">{p.value}</p>
+              <p className={`text-sm font-semibold ${p.textClass}`}>{p.name}</p>
             </div>
           ))}
         </div>

@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import styles from "./EmptyState.module.css";
 
 interface EmptyStateProps {
   icon?: React.ReactNode;
@@ -9,13 +10,13 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
-        {icon || <Search size={24} className="text-gray-400" />}
+    <div className={styles.root}>
+      <div className={styles.iconWrapper}>
+        {icon || <Search size={24} aria-hidden="true" />}
       </div>
-      <h3 className="text-gray-700" style={{ fontWeight: 600 }}>{title}</h3>
-      {description && <p className="text-gray-400 text-sm mt-1 max-w-sm">{description}</p>}
-      {action && <div className="mt-4">{action}</div>}
+      <h3 className={styles.title}>{title}</h3>
+      {description && <p className={styles.description}>{description}</p>}
+      {action && <div className={styles.action}>{action}</div>}
     </div>
   );
 }

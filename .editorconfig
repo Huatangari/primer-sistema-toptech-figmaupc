@@ -1,0 +1,28 @@
+# EditorConfig — https://editorconfig.org
+# Ensures consistent coding style across editors (VS Code, WebStorm, vim, etc.)
+root = true
+
+[*]
+charset                  = utf-8
+end_of_line              = lf
+indent_style             = space
+indent_size              = 2
+trim_trailing_whitespace = true
+insert_final_newline     = true
+
+[*.md]
+# Markdown: trailing spaces are significant (line breaks)
+trim_trailing_whitespace = false
+max_line_length          = off
+
+[*.json]
+indent_size = 2
+
+[*.yml]
+indent_size = 2
+
+[*.{ts,tsx,js,jsx,css,mjs,cjs}]
+indent_size = 2
+
+[Makefile]
+indent_style = tab

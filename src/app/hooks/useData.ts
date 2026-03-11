@@ -68,7 +68,7 @@ export function useData<T>(
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [revision, key]);
 
   const refetch = useCallback(() => setRevision((r) => r + 1), []);

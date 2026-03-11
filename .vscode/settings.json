@@ -1,0 +1,34 @@
+{
+  // ── CSS validation ──────────────────────────────────────────────────────────
+  // Disable VS Code's built-in CSS validator: it doesn't understand Tailwind v4
+  // syntax (@apply, @reference, space-y-*, etc.). Validation is handled by
+  // the Tailwind CSS IntelliSense extension instead.
+  "css.validate": false,
+  "scss.validate": false,
+  "css.lint.unknownAtRules": "ignore",
+  "css.lint.unknownProperties": "ignore",
+
+  // ── Generated files ─────────────────────────────────────────────────────────
+  // Exclude build output from VS Code file indexing and all extension analysis
+  // (Microsoft Edge Tools, ESLint, etc.). These files are generated artifacts —
+  // source code is the single source of truth.
+  "files.exclude": {
+    "dist": true
+  },
+  "search.exclude": {
+    "dist": true,
+    "node_modules": true
+  },
+
+  // ── Formatting ──────────────────────────────────────────────────────────────
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // ── Tailwind CSS IntelliSense ────────────────────────────────────────────────
+  "tailwindCSS.experimental.classRegex": [],
+  "files.associations": {
+    "*.css": "css"
+  }
+}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import { ArrowLeft, Camera, MessageSquare, CheckCircle, XCircle, AlertTriangle, User, Calendar } from "lucide-react";
+import { ArrowLeft, Camera, MessageSquare, CheckCircle, AlertTriangle, User, Calendar } from "lucide-react";
 import { IncidentPriorityBadge, IncidentStatusBadge, AssetStatusBadge } from "../components/shared/StatusBadge";
 import { CategoryIcon } from "../components/shared/CategoryIcon";
 import { Timeline } from "../components/shared/Timeline";
@@ -40,10 +40,10 @@ export function IncidentDetail() {
     return (
       <div className="p-6">
         <EmptyState
-          icon={<AlertTriangle size={24} className="text-gray-400" />}
+          icon={<AlertTriangle size={24} aria-hidden="true" />}
           title="Incidencia no encontrada"
           action={
-            <button onClick={() => navigate("/incidencias")} className="text-blue-600 text-sm">
+            <button type="button" onClick={() => navigate("/incidencias")} className="text-blue-600 text-sm">
               Volver a incidencias
             </button>
           }
@@ -82,7 +82,7 @@ export function IncidentDetail() {
               <IncidentPriorityBadge priority={incident.priority} />
               <IncidentStatusBadge status={incident.status} />
             </div>
-            <h2 className="text-white mb-2" style={{ fontSize: "20px", fontWeight: 700 }}>
+            <h2 className="text-white mb-2 text-xl font-bold">
               {incident.title}
             </h2>
             <div className="flex items-center gap-4 text-white/60 text-sm flex-wrap">
@@ -100,8 +100,7 @@ export function IncidentDetail() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowCloseConfirm(true)}
-                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm px-4 py-2 rounded-lg transition-colors"
-                style={{ fontWeight: 500 }}
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
               >
                 <CheckCircle size={15} />
                 Marcar como Resuelta
@@ -113,7 +112,7 @@ export function IncidentDetail() {
               <CheckCircle size={16} className="text-emerald-400" />
               <div>
                 <p className="text-emerald-300 text-xs">Resuelta el</p>
-                <p className="text-white text-sm" style={{ fontWeight: 600 }}>{formatDate(incident.resolvedAt || "")}</p>
+                <p className="text-white text-sm font-semibold">{formatDate(incident.resolvedAt || "")}</p>
               </div>
             </div>
           )}
@@ -127,7 +126,7 @@ export function IncidentDetail() {
             <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle size={24} className="text-emerald-600" />
             </div>
-            <h3 className="text-center text-gray-900 mb-2" style={{ fontWeight: 700 }}>
+            <h3 className="text-center text-gray-900 mb-2 font-bold">
               ¿Marcar como resuelta?
             </h3>
             <p className="text-center text-gray-500 text-sm mb-5">
@@ -142,8 +141,7 @@ export function IncidentDetail() {
               </button>
               <button
                 onClick={() => { setShowCloseConfirm(false); navigate("/incidencias"); }}
-                className="flex-1 bg-emerald-600 text-white py-2.5 rounded-lg text-sm hover:bg-emerald-700"
-                style={{ fontWeight: 600 }}
+                className="flex-1 bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-700"
               >
                 Confirmar
               </button>
@@ -157,11 +155,11 @@ export function IncidentDetail() {
         <div className="xl:col-span-2 space-y-5">
           {/* Description */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-gray-900 mb-3" style={{ fontWeight: 600 }}>Descripción del caso</h3>
+            <h3 className="text-gray-900 mb-3 font-semibold">Descripción del caso</h3>
             <p className="text-sm text-gray-700 leading-relaxed">{incident.description}</p>
             {incident.observations && (
               <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
-                <p className="text-xs text-amber-600 mb-1" style={{ fontWeight: 600 }}>Observaciones</p>
+                <p className="text-xs text-amber-600 mb-1 font-semibold">Observaciones</p>
                 <p className="text-sm text-gray-700">{incident.observations}</p>
               </div>
             )}
@@ -170,7 +168,7 @@ export function IncidentDetail() {
           {/* Evidence placeholder */}
           {incident.hasEvidence && (
             <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h3 className="text-gray-900 mb-3" style={{ fontWeight: 600 }}>Evidencia fotográfica</h3>
+              <h3 className="text-gray-900 mb-3 font-semibold">Evidencia fotográfica</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 {[1, 2].map((n) => (
                   <div
@@ -182,7 +180,7 @@ export function IncidentDetail() {
                   </div>
                 ))}
                 <div className="aspect-video bg-blue-50 rounded-lg flex flex-col items-center justify-center border border-dashed border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors">
-                  <span className="text-xs text-blue-500" style={{ fontWeight: 500 }}>+ Agregar</span>
+                  <span className="text-xs text-blue-500 font-medium">+ Agregar</span>
                 </div>
               </div>
             </div>
@@ -190,7 +188,7 @@ export function IncidentDetail() {
 
           {/* Timeline */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-gray-900 mb-4" style={{ fontWeight: 600 }}>Timeline del caso</h3>
+            <h3 className="text-gray-900 mb-4 font-semibold">Timeline del caso</h3>
             {events.length === 0 ? (
               <p className="text-sm text-gray-400">Sin eventos registrados</p>
             ) : (
@@ -210,7 +208,7 @@ export function IncidentDetail() {
 
           {/* Add comment */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-gray-900 mb-3" style={{ fontWeight: 600 }}>Agregar comentario</h3>
+            <h3 className="text-gray-900 mb-3 font-semibold">Agregar comentario</h3>
             <textarea
               rows={3}
               value={comment}
@@ -221,9 +219,8 @@ export function IncidentDetail() {
             <div className="flex justify-end mt-3">
               <button
                 onClick={() => setComment("")}
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
                 disabled={!comment.trim()}
-                style={{ fontWeight: 500 }}
               >
                 <MessageSquare size={14} />
                 Agregar
@@ -236,7 +233,7 @@ export function IncidentDetail() {
         <div className="space-y-5">
           {/* Incident details */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-gray-900 mb-4" style={{ fontWeight: 600 }}>Detalles</h3>
+            <h3 className="text-gray-900 mb-4 font-semibold">Detalles</h3>
             <div className="space-y-3">
               {[
                 { label: "Código", value: incident.code },
@@ -261,7 +258,7 @@ export function IncidentDetail() {
           {/* Related asset */}
           {asset && (
             <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h3 className="text-gray-900 mb-3" style={{ fontWeight: 600 }}>Activo Relacionado</h3>
+              <h3 className="text-gray-900 mb-3 font-semibold">Activo Relacionado</h3>
               <div
                 onClick={() => navigate(`/activos/${asset.id}`)}
                 className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
@@ -270,7 +267,7 @@ export function IncidentDetail() {
                   <CategoryIcon category={asset.category} size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-800 truncate" style={{ fontWeight: 500 }}>{asset.name}</p>
+                  <p className="text-sm text-gray-800 truncate font-medium">{asset.name}</p>
                   <p className="text-xs text-gray-400">{asset.code} · {asset.location}</p>
                 </div>
                 <AssetStatusBadge status={asset.status} />

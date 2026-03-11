@@ -1,0 +1,64 @@
+/* ErrorState Component Styles */
+
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  min-height: 256px;
+}
+
+.content {
+  text-align: center;
+}
+
+.iconWrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--color-danger-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--spacing-lg);
+  color: var(--color-danger);
+}
+
+.title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-gray-900);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.message {
+  font-size: var(--font-size-sm);
+  color: var(--color-gray-500);
+  margin: 0 0 var(--spacing-lg) 0;
+  max-width: 300px;
+  line-height: var(--line-height-normal);
+}
+
+.retryButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  color: var(--color-primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.retryButton:hover {
+  text-decoration: underline;
+  color: var(--color-primary-700);
+}
+
+.retryButton:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

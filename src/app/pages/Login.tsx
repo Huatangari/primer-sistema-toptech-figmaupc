@@ -48,15 +48,15 @@ export function Login() {
               <Building2 size={20} className="text-white" />
             </div>
             <div>
-              <p className="text-white" style={{ fontWeight: 700, fontSize: "18px" }}>BuildTrack</p>
-              <p className="text-blue-300" style={{ fontSize: "12px" }}>Gestión Técnica de Edificios</p>
+              <p className="text-white font-bold text-lg">BuildTrack</p>
+              <p className="text-blue-300 text-xs">Gestión Técnica de Edificios</p>
             </div>
           </div>
 
-          <h2 className="text-white mb-4" style={{ fontSize: "32px", fontWeight: 700, lineHeight: "1.2" }}>
+          <h2 className="text-white mb-4 text-[32px] font-bold leading-tight">
             Control total<br />de tu edificio
           </h2>
-          <p className="text-slate-400" style={{ lineHeight: "1.7", fontSize: "15px" }}>
+          <p className="text-slate-400 text-[15px] leading-[1.7]">
             Centraliza activos, incidencias, documentos y proveedores en una sola plataforma diseñada para la gestión técnica profesional.
           </p>
         </div>
@@ -89,11 +89,11 @@ export function Login() {
             <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center">
               <Building2 size={20} className="text-white" />
             </div>
-            <p className="text-white" style={{ fontWeight: 700, fontSize: "20px" }}>BuildTrack</p>
+            <p className="text-white font-bold text-xl">BuildTrack</p>
           </div>
 
           <div className="mb-8">
-            <h1 className="text-white mb-1" style={{ fontSize: "26px", fontWeight: 700 }}>
+            <h1 className="text-white mb-1 text-[26px] font-bold">
               Iniciar sesión
             </h1>
             <p className="text-slate-400 text-sm">Accede a tu panel de gestión técnica</p>
@@ -107,7 +107,7 @@ export function Login() {
             </div>
           ) : (
             <div className="mb-6 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <p className="text-blue-400 text-xs" style={{ fontWeight: 500 }}>
+              <p className="text-blue-400 text-xs font-medium">
                 {IS_SUPABASE_CONFIGURED ? "🔒 Ingresa con tus credenciales" : "🔒 Modo demo — credenciales pre-cargadas"}
               </p>
             </div>
@@ -116,12 +116,13 @@ export function Login() {
           <form onSubmit={handleLogin} className="space-y-4">
             {/* Email */}
             <div>
-              <label className="block text-slate-300 text-sm mb-1.5" style={{ fontWeight: 500 }}>
+              <label htmlFor="email" className="block text-slate-300 text-sm font-medium mb-1.5">
                 Correo electrónico
               </label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
+                  id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -133,12 +134,13 @@ export function Login() {
 
             {/* Password */}
             <div>
-              <label className="block text-slate-300 text-sm mb-1.5" style={{ fontWeight: 500 }}>
+              <label htmlFor="password" className="block text-slate-300 text-sm font-medium mb-1.5">
                 Contraseña
               </label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                 <input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -159,8 +161,7 @@ export function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-70 text-white rounded-lg py-2.5 text-sm flex items-center justify-center gap-2 transition-all mt-2"
-              style={{ fontWeight: 600 }}
+              className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-70 text-white rounded-lg py-2.5 text-sm font-semibold flex items-center justify-center gap-2 transition-all mt-2"
             >
               {loading ? (
                 <>
