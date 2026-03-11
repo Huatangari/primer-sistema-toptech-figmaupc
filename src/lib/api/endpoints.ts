@@ -8,6 +8,7 @@
  */
 
 import { supabase, IS_SUPABASE_CONFIGURED } from "../auth/authClient";
+import { mockIncidents, mockIncidentEvents } from "../mock-data/incidents";
 import type { Incident, Document } from "../types";
 import type { IncidentPriority } from "../types";
 
@@ -82,7 +83,24 @@ export async function createIncident(input: CreateIncidentInput): Promise<Incide
 export async function closeIncident(input: CloseIncidentInput): Promise<Incident> {
   if (!IS_SUPABASE_CONFIGURED) {
     notConfigured("closeIncident");
-    throw new Error("Conecta Supabase para cerrar incidencias reales");
+    const incident = mockIncidents.find((item) => item.id === input.incident_id);
+    if (!incident) throw new Error("Incidencia no encontrada");
+
+    const now = new Date().toISOString();
+    incident.status = "Resuelta";
+    incident.updatedAt = now;
+    incident.resolvedAt = now;
+
+    mockIncidentEvents.push({
+      id: `iev-${Date.now()}`,
+      incidentId: incident.id,
+      date: now,
+      type: "Resolución",
+      description: input.resolution_notes || "Incidencia marcada como resuelta",
+      author: "Sistema demo",
+    });
+
+    return incident;
   }
 
   const { data, error } = await supabase.functions.invoke("close-incident", {

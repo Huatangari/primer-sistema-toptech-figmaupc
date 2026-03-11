@@ -139,6 +139,7 @@ Ver [`docs/architecture.md`](docs/architecture.md) para el detalle completo.
 | `/documentos` | Repositorio documental |
 | `/proveedores` | Gestión de proveedores |
 | `/reportes` | Reportes y gráficos ejecutivos |
+| `/configuracion` | Configuración del sistema |
 
 ---
 

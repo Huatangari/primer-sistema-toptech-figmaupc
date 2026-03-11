@@ -9,6 +9,7 @@ import { ErrorState } from "../components/shared/ErrorState";
 import { useData } from "../hooks/useData";
 import { getIncidentById, getIncidentEvents } from "../../lib/services/incidents";
 import { getAssetById } from "../../lib/services/assets";
+import { closeIncident } from "../../lib/api/endpoints";
 import { getCategoryColor, formatDate, formatDateTime } from "../../lib/utils";
 import { Asset, Incident, IncidentEvent } from "../../lib/types";
 
@@ -17,6 +18,8 @@ export function IncidentDetail() {
   const navigate = useNavigate();
   const [comment, setComment] = useState("");
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [closeError, setCloseError] = useState<string | null>(null);
 
   const { data: { incident, asset, events }, loading, error, refetch } = useData(
     async () => {
@@ -53,6 +56,23 @@ export function IncidentDetail() {
   }
 
   const isOpen = incident.status === "Abierta" || incident.status === "En Proceso";
+
+  const handleConfirmClose = async () => {
+    if (!incident || isClosing) return;
+
+    setIsClosing(true);
+    setCloseError(null);
+
+    try {
+      await closeIncident({ incident_id: incident.id });
+      setShowCloseConfirm(false);
+      navigate("/incidencias");
+    } catch (err: unknown) {
+      setCloseError(err instanceof Error ? err.message : "No se pudo cerrar la incidencia");
+    } finally {
+      setIsClosing(false);
+    }
+  };
 
   // Severity color
   const headerColor =
@@ -132,18 +152,27 @@ export function IncidentDetail() {
             <p className="text-center text-gray-500 text-sm mb-5">
               Esta acción registrará la incidencia como resuelta en el historial.
             </p>
+            {closeError && (
+              <p className="text-red-600 text-sm mb-3" role="alert">
+                {closeError}
+              </p>
+            )}
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={() => setShowCloseConfirm(false)}
-                className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm hover:bg-gray-50"
+                disabled={isClosing}
+                className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-60"
               >
                 Cancelar
               </button>
               <button
-                onClick={() => { setShowCloseConfirm(false); navigate("/incidencias"); }}
-                className="flex-1 bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-700"
+                type="button"
+                onClick={handleConfirmClose}
+                disabled={isClosing}
+                className="flex-1 bg-emerald-600 text-white py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60"
               >
-                Confirmar
+                {isClosing ? "Cerrando..." : "Confirmar"}
               </button>
             </div>
           </div>

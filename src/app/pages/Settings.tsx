@@ -141,7 +141,7 @@ export function Settings() {
                   { label: "Incidencias críticas", desc: "Alerta inmediata cuando se registra una incidencia de prioridad crítica", enabled: true },
                   { label: "Vencimiento de certificados", desc: "Aviso 30 días antes del vencimiento de certificados", enabled: true },
                   { label: "Próximos mantenimientos", desc: "Recordatorio 7 días antes del mantenimiento programado", enabled: true },
-                  { label: "Incidencias sin asignar", desc: "Alerta si una incidencia lleva más de 24hs sin asignar", enabled: false },
+                  { label: "Incidencias sin asignar", desc: "Alerta si una incidencia lleva más de 24 h sin asignar", enabled: false },
                   { label: "Resumen semanal", desc: "Email con resumen técnico del edificio cada lunes", enabled: false },
                   { label: "Nuevos documentos", desc: "Notificación cuando se sube un nuevo documento al repositorio", enabled: false },
                 ].map((notif) => (
