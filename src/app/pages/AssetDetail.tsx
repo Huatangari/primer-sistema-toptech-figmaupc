@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import {
   ArrowLeft,
@@ -16,8 +16,11 @@ import { AssetStatusBadge, DocumentTypeBadge, IncidentPriorityBadge, IncidentSta
 import { CategoryIcon } from "../components/shared/CategoryIcon";
 import { Timeline } from "../components/shared/Timeline";
 import { EmptyState } from "../components/shared/EmptyState";
-import { mockAssets, mockAssetHistory, mockIncidents, mockDocuments } from "../../lib/mock-data";
+import { getAssetById, getAssetHistory, getAssetsByProviderId } from "../../lib/services/assets";
+import { getIncidentsByAssetId } from "../../lib/services/incidents";
+import { getDocumentsByAssetId } from "../../lib/services/documents";
 import { getCategoryColor, formatDate, timeAgo } from "../../lib/utils";
+import { Asset, AssetHistoryEvent, Document, Incident } from "../../lib/types";
 
 type Tab = "resumen" | "historial" | "documentos" | "incidencias";
 
@@ -25,8 +28,35 @@ export function AssetDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<Tab>("resumen");
+  const [asset, setAsset] = useState<Asset | undefined>();
+  const [assetHistory, setAssetHistory] = useState<AssetHistoryEvent[]>([]);
+  const [assetIncidents, setAssetIncidents] = useState<Incident[]>([]);
+  const [assetDocuments, setAssetDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const asset = mockAssets.find((a) => a.id === id);
+  useEffect(() => {
+    if (!id) return;
+    Promise.all([
+      getAssetById(id),
+      getAssetHistory(id),
+      getIncidentsByAssetId(id),
+      getDocumentsByAssetId(id),
+    ]).then(([a, history, incidents, documents]) => {
+      setAsset(a);
+      setAssetHistory(history);
+      setAssetIncidents(incidents);
+      setAssetDocuments(documents);
+      setLoading(false);
+    });
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center h-64">
+        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!asset) {
     return (
@@ -44,10 +74,6 @@ export function AssetDetail() {
       </div>
     );
   }
-
-  const assetHistory = mockAssetHistory.filter((e) => e.assetId === id);
-  const assetIncidents = mockIncidents.filter((i) => i.assetId === id);
-  const assetDocuments = mockDocuments.filter((d) => d.assetId === id);
 
   const tabs: { key: Tab; label: string; count?: number }[] = [
     { key: "resumen", label: "Resumen" },

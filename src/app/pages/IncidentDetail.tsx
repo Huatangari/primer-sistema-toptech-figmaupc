@@ -1,20 +1,45 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router";
 import { ArrowLeft, Camera, MessageSquare, CheckCircle, XCircle, AlertTriangle, User, Calendar } from "lucide-react";
 import { IncidentPriorityBadge, IncidentStatusBadge, AssetStatusBadge } from "../components/shared/StatusBadge";
 import { CategoryIcon } from "../components/shared/CategoryIcon";
 import { Timeline } from "../components/shared/Timeline";
 import { EmptyState } from "../components/shared/EmptyState";
-import { mockIncidents, mockIncidentEvents, mockAssets } from "../../lib/mock-data";
+import { getIncidentById, getIncidentEvents } from "../../lib/services/incidents";
+import { getAssetById } from "../../lib/services/assets";
 import { getCategoryColor, formatDate, formatDateTime } from "../../lib/utils";
+import { Asset, Incident, IncidentEvent } from "../../lib/types";
 
 export function IncidentDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [comment, setComment] = useState("");
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [incident, setIncident] = useState<Incident | undefined>();
+  const [asset, setAsset] = useState<Asset | undefined>();
+  const [events, setEvents] = useState<IncidentEvent[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const incident = mockIncidents.find((i) => i.id === id);
+  useEffect(() => {
+    if (!id) return;
+    getIncidentById(id).then(async (inc) => {
+      setIncident(inc);
+      if (inc) {
+        const [a, evts] = await Promise.all([getAssetById(inc.assetId), getIncidentEvents(id)]);
+        setAsset(a);
+        setEvents(evts);
+      }
+      setLoading(false);
+    });
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center h-64">
+        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!incident) {
     return (
@@ -31,9 +56,6 @@ export function IncidentDetail() {
       </div>
     );
   }
-
-  const asset = mockAssets.find((a) => a.id === incident.assetId);
-  const events = mockIncidentEvents.filter((e) => e.incidentId === id);
 
   const isOpen = incident.status === "Abierta" || incident.status === "En Proceso";
 

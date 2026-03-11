@@ -1,12 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { Search, Plus, Filter, ArrowRight, Package2 } from "lucide-react";
 import { AssetStatusBadge } from "../components/shared/StatusBadge";
 import { CategoryIcon } from "../components/shared/CategoryIcon";
 import { EmptyState } from "../components/shared/EmptyState";
-import { mockAssets } from "../../lib/mock-data";
+import { getAssets } from "../../lib/services/assets";
 import { getCategoryColor, formatDate } from "../../lib/utils";
-import { AssetCategory, AssetStatus } from "../../lib/types";
+import { Asset, AssetCategory, AssetStatus } from "../../lib/types";
 
 const CATEGORIES: (AssetCategory | "Todas")[] = [
   "Todas",
@@ -25,14 +25,20 @@ const STATUSES: (AssetStatus | "Todos")[] = ["Todos", "Operativo", "En Mantenimi
 export function AssetsList() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<AssetCategory | "Todas">(
     (searchParams.get("categoria") as AssetCategory) || "Todas"
   );
   const [statusFilter, setStatusFilter] = useState<AssetStatus | "Todos">("Todos");
 
+  useEffect(() => {
+    getAssets().then((data) => { setAssets(data); setLoading(false); });
+  }, []);
+
   const filtered = useMemo(() => {
-    return mockAssets.filter((a) => {
+    return assets.filter((a) => {
       const matchSearch =
         !search ||
         a.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -42,7 +48,15 @@ export function AssetsList() {
       const matchStatus = statusFilter === "Todos" || a.status === statusFilter;
       return matchSearch && matchCat && matchStatus;
     });
-  }, [search, categoryFilter, statusFilter]);
+  }, [assets, search, categoryFilter, statusFilter]);
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center h-64">
+        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-5 max-w-screen-2xl mx-auto">
@@ -99,7 +113,7 @@ export function AssetsList() {
       {/* Stats row */}
       <div className="flex items-center gap-4 flex-wrap">
         <span className="text-sm text-gray-500">
-          Mostrando <strong className="text-gray-700">{filtered.length}</strong> de <strong className="text-gray-700">{mockAssets.length}</strong> activos
+          Mostrando <strong className="text-gray-700">{filtered.length}</strong> de <strong className="text-gray-700">{assets.length}</strong> activos
         </span>
         <div className="flex items-center gap-2 flex-wrap">
           {(["Operativo", "En Mantenimiento", "Falla", "Vencido"] as AssetStatus[]).map((s) => {
@@ -201,7 +215,7 @@ export function AssetsList() {
                     <td className="px-4 py-3.5 hidden lg:table-cell">
                       {(() => {
                         const next = new Date(asset.nextMaintenance);
-                        const now = new Date("2025-03-10");
+                        const now = new Date();
                         const days = Math.ceil((next.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
                         return (
                           <div className="flex items-center gap-2">

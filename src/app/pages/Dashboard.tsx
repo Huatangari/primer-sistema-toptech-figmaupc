@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import {
   Package2,
@@ -14,9 +15,10 @@ import { RadialBarChart, RadialBar, ResponsiveContainer, Tooltip } from "rechart
 import { KpiCard } from "../components/shared/KpiCard";
 import { AssetStatusBadge, IncidentPriorityBadge, IncidentStatusBadge } from "../components/shared/StatusBadge";
 import { CategoryIcon } from "../components/shared/CategoryIcon";
-import { mockAssets, mockIncidents } from "../../lib/mock-data";
+import { getAssets } from "../../lib/services/assets";
+import { getIncidents } from "../../lib/services/incidents";
 import { getCategoryColor, formatDate, timeAgo } from "../../lib/utils";
-import { AssetCategory } from "../../lib/types";
+import { Asset, AssetCategory, Incident } from "../../lib/types";
 
 const CATEGORIES: AssetCategory[] = [
   "Ascensores",
@@ -31,18 +33,29 @@ const CATEGORIES: AssetCategory[] = [
 
 export function Dashboard() {
   const navigate = useNavigate();
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([getAssets(), getIncidents()]).then(([a, i]) => {
+      setAssets(a);
+      setIncidents(i);
+      setLoading(false);
+    });
+  }, []);
 
   // KPI calculations
-  const totalAssets = mockAssets.length;
-  const openIncidents = mockIncidents.filter((i) => i.status === "Abierta" || i.status === "En Proceso").length;
-  const closedIncidents = mockIncidents.filter((i) => i.status === "Resuelta" || i.status === "Cerrada").length;
-  const criticalIncidents = mockIncidents.filter((i) => i.priority === "Crítica" && i.status !== "Cerrada").length;
-  const assetsWithIssues = mockAssets.filter((a) => a.status === "Falla" || a.status === "Vencido").length;
-  const healthScore = Math.round(((totalAssets - assetsWithIssues) / totalAssets) * 100);
+  const totalAssets = assets.length;
+  const openIncidents = incidents.filter((i) => i.status === "Abierta" || i.status === "En Proceso").length;
+  const closedIncidents = incidents.filter((i) => i.status === "Resuelta" || i.status === "Cerrada").length;
+  const criticalIncidents = incidents.filter((i) => i.priority === "Crítica" && i.status !== "Cerrada").length;
+  const assetsWithIssues = assets.filter((a) => a.status === "Falla" || a.status === "Vencido").length;
+  const healthScore = totalAssets > 0 ? Math.round(((totalAssets - assetsWithIssues) / totalAssets) * 100) : 0;
 
   // Category status
   const categoryStatus = CATEGORIES.map((cat) => {
-    const catAssets = mockAssets.filter((a) => a.category === cat);
+    const catAssets = assets.filter((a) => a.category === cat);
     const operational = catAssets.filter((a) => a.status === "Operativo").length;
     const issues = catAssets.filter((a) => a.status === "Falla" || a.status === "Vencido").length;
     const maintenance = catAssets.filter((a) => a.status === "En Mantenimiento").length;
@@ -50,17 +63,22 @@ export function Dashboard() {
   }).filter((c) => c.total > 0);
 
   // Recent incidents (last 5)
-  const recentIncidents = [...mockIncidents]
+  const recentIncidents = [...incidents]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5);
 
   // Critical assets
-  const criticalAssets = mockAssets.filter(
+  const criticalAssets = assets.filter(
     (a) => a.status === "Falla" || a.status === "Vencido" || a.status === "En Mantenimiento"
   ).slice(0, 4);
 
-  // Health data for radial chart
-  const healthData = [{ name: "Salud", value: healthScore, fill: healthScore >= 80 ? "#10b981" : healthScore >= 60 ? "#f59e0b" : "#ef4444" }];
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center h-64">
+        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6 max-w-screen-2xl mx-auto">
@@ -212,7 +230,7 @@ export function Dashboard() {
             </div>
             <div className="divide-y divide-gray-50">
               {recentIncidents.map((inc) => {
-                const asset = mockAssets.find((a) => a.id === inc.assetId);
+                const asset = assets.find((a) => a.id === inc.assetId);
                 return (
                   <div
                     key={inc.id}
@@ -280,13 +298,13 @@ export function Dashboard() {
             <div className="grid grid-cols-3 gap-3 mt-3 text-center">
               <div>
                 <p className="text-emerald-600" style={{ fontSize: "18px", fontWeight: 700 }}>
-                  {mockAssets.filter((a) => a.status === "Operativo").length}
+                  {assets.filter((a) => a.status === "Operativo").length}
                 </p>
                 <p className="text-gray-400 text-xs">Operativo</p>
               </div>
               <div>
                 <p className="text-amber-600" style={{ fontSize: "18px", fontWeight: 700 }}>
-                  {mockAssets.filter((a) => a.status === "En Mantenimiento").length}
+                  {assets.filter((a) => a.status === "En Mantenimiento").length}
                 </p>
                 <p className="text-gray-400 text-xs">Mantención</p>
               </div>
@@ -332,13 +350,13 @@ export function Dashboard() {
               <p className="text-gray-400 text-xs mt-0.5">En los próximos 60 días</p>
             </div>
             <div className="divide-y divide-gray-50">
-              {mockAssets
+              {assets
                 .filter((a) => a.nextMaintenance)
                 .sort((a, b) => new Date(a.nextMaintenance).getTime() - new Date(b.nextMaintenance).getTime())
                 .slice(0, 4)
                 .map((asset) => {
                   const next = new Date(asset.nextMaintenance);
-                  const now = new Date("2025-03-10");
+                  const now = new Date();
                   const daysLeft = Math.ceil((next.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
                   return (
                     <div key={asset.id} className="px-5 py-3 flex items-center gap-3">

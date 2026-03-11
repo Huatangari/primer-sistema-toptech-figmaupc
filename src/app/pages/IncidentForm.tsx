@@ -1,11 +1,17 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, Upload, X, Camera, CheckCircle } from "lucide-react";
-import { mockAssets } from "../../lib/mock-data";
+import { getAssets } from "../../lib/services/assets";
+import { Asset } from "../../lib/types";
 
 export function IncidentForm() {
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [assets, setAssets] = useState<Asset[]>([]);
+
+  useEffect(() => {
+    getAssets().then(setAssets);
+  }, []);
 
   const [form, setForm] = useState({
     assetId: "",
@@ -79,7 +85,7 @@ export function IncidentForm() {
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-100 text-gray-700"
             >
               <option value="">Seleccionar activo...</option>
-              {mockAssets.map((a) => (
+              {assets.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.code} – {a.name}
                 </option>

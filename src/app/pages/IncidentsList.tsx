@@ -1,25 +1,37 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { Search, Plus, Filter, ArrowRight, AlertTriangle } from "lucide-react";
 import { IncidentPriorityBadge, IncidentStatusBadge } from "../components/shared/StatusBadge";
 import { EmptyState } from "../components/shared/EmptyState";
-import { mockIncidents, mockAssets } from "../../lib/mock-data";
+import { getIncidents } from "../../lib/services/incidents";
+import { getAssets } from "../../lib/services/assets";
 import { formatDate, timeAgo } from "../../lib/utils";
-import { IncidentPriority, IncidentStatus } from "../../lib/types";
+import { Asset, Incident, IncidentPriority, IncidentStatus } from "../../lib/types";
 
 const STATUSES: (IncidentStatus | "Todos")[] = ["Todos", "Abierta", "En Proceso", "Resuelta", "Cerrada"];
 const PRIORITIES: (IncidentPriority | "Todas")[] = ["Todas", "Crítica", "Alta", "Media", "Baja"];
 
 export function IncidentsList() {
   const navigate = useNavigate();
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<IncidentStatus | "Todos">("Todos");
   const [priorityFilter, setPriorityFilter] = useState<IncidentPriority | "Todas">("Todas");
 
+  useEffect(() => {
+    Promise.all([getIncidents(), getAssets()]).then(([i, a]) => {
+      setIncidents(i);
+      setAssets(a);
+      setLoading(false);
+    });
+  }, []);
+
   const filtered = useMemo(() => {
-    return mockIncidents
+    return incidents
       .filter((i) => {
-        const asset = mockAssets.find((a) => a.id === i.assetId);
+        const asset = assets.find((a) => a.id === i.assetId);
         const matchSearch =
           !search ||
           i.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -30,11 +42,19 @@ export function IncidentsList() {
         return matchSearch && matchStatus && matchPriority;
       })
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [search, statusFilter, priorityFilter]);
+  }, [incidents, assets, search, statusFilter, priorityFilter]);
 
-  const openCount = mockIncidents.filter((i) => i.status === "Abierta").length;
-  const inProcessCount = mockIncidents.filter((i) => i.status === "En Proceso").length;
-  const criticalCount = mockIncidents.filter((i) => i.priority === "Crítica" && i.status !== "Cerrada").length;
+  const openCount = incidents.filter((i) => i.status === "Abierta").length;
+  const inProcessCount = incidents.filter((i) => i.status === "En Proceso").length;
+  const criticalCount = incidents.filter((i) => i.priority === "Crítica" && i.status !== "Cerrada").length;
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center h-64">
+        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-5 max-w-screen-2xl mx-auto">
@@ -141,7 +161,7 @@ export function IncidentsList() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filtered.map((inc) => {
-                  const asset = mockAssets.find((a) => a.id === inc.assetId);
+                  const asset = assets.find((a) => a.id === inc.assetId);
                   return (
                     <tr
                       key={inc.id}

@@ -1,25 +1,46 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Search, Plus, Star, Phone, Mail, ArrowRight, Users } from "lucide-react";
 import { ProviderStatusBadge } from "../components/shared/StatusBadge";
 import { CategoryIcon } from "../components/shared/CategoryIcon";
 import { EmptyState } from "../components/shared/EmptyState";
-import { mockProviders, mockAssets, mockIncidents } from "../../lib/mock-data";
+import { getProviders } from "../../lib/services/providers";
+import { getAssets } from "../../lib/services/assets";
 import { getCategoryColor, formatDate } from "../../lib/utils";
+import { Asset, Provider } from "../../lib/types";
 
 export function Providers() {
+  const [providers, setProviders] = useState<Provider[]>([]);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
 
+  useEffect(() => {
+    Promise.all([getProviders(), getAssets()]).then(([p, a]) => {
+      setProviders(p);
+      setAssets(a);
+      setLoading(false);
+    });
+  }, []);
+
   const filtered = useMemo(() => {
-    return mockProviders.filter((p) =>
+    return providers.filter((p) =>
       !search ||
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.rubro.toLowerCase().includes(search.toLowerCase()) ||
       p.contactName.toLowerCase().includes(search.toLowerCase())
     );
-  }, [search]);
+  }, [providers, search]);
 
-  const selectedProvider = mockProviders.find((p) => p.id === selected);
+  const selectedProvider = providers.find((p) => p.id === selected);
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center h-64">
+        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-5 max-w-screen-2xl mx-auto">
@@ -48,9 +69,9 @@ export function Providers() {
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Total Proveedores", value: mockProviders.length, color: "text-blue-600" },
-          { label: "Activos", value: mockProviders.filter((p) => p.status === "Activo").length, color: "text-emerald-600" },
-          { label: "Pend. Evaluación", value: mockProviders.filter((p) => p.status === "Pendiente Evaluación").length, color: "text-amber-600" },
+          { label: "Total Proveedores", value: providers.length, color: "text-blue-600" },
+          { label: "Activos", value: providers.filter((p) => p.status === "Activo").length, color: "text-emerald-600" },
+          { label: "Pend. Evaluación", value: providers.filter((p) => p.status === "Pendiente Evaluación").length, color: "text-amber-600" },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-4">
             <p className={s.color} style={{ fontSize: "24px", fontWeight: 700 }}>{s.value}</p>
@@ -212,7 +233,7 @@ export function Providers() {
             <div className="border-t border-gray-100 pt-4">
               <p className="text-xs text-gray-400 mb-2">Activos asignados</p>
               <div className="space-y-1.5">
-                {mockAssets.filter((a) => a.providerId === selectedProvider.id).slice(0, 4).map((a) => (
+                {assets.filter((a) => a.providerId === selectedProvider.id).slice(0, 4).map((a) => (
                   <div key={a.id} className="flex items-center gap-2">
                     <div className={`w-6 h-6 rounded flex items-center justify-center flex-shrink-0 ${getCategoryColor(a.category)}`}>
                       <CategoryIcon category={a.category} size={11} />

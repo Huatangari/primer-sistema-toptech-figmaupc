@@ -1,7 +1,10 @@
+import { useState, useEffect, useMemo } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from "recharts";
 import { FileText, Download, BarChart3, PieChartIcon, TrendingUp, Package2, AlertTriangle, CheckCircle } from "lucide-react";
-import { mockAssets, mockIncidents, mockDocuments } from "../../lib/mock-data";
-import { AssetCategory } from "../../lib/types";
+import { getAssets } from "../../lib/services/assets";
+import { getIncidents } from "../../lib/services/incidents";
+import { getDocuments } from "../../lib/services/documents";
+import { Asset, AssetCategory, Document, Incident } from "../../lib/types";
 
 const CATEGORIES: AssetCategory[] = [
   "Ascensores", "Extintores", "CCTV", "Sistema Eléctrico",
@@ -11,30 +14,44 @@ const CATEGORIES: AssetCategory[] = [
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#f97316", "#84cc16"];
 
 export function Reports() {
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([getAssets(), getIncidents(), getDocuments()]).then(([a, i, d]) => {
+      setAssets(a);
+      setIncidents(i);
+      setDocuments(d);
+      setLoading(false);
+    });
+  }, []);
+
   // Asset by category
-  const assetsByCategory = CATEGORIES.map((cat) => ({
+  const assetsByCategory = useMemo(() => CATEGORIES.map((cat) => ({
     name: cat.length > 10 ? cat.substring(0, 10) + "…" : cat,
     fullName: cat,
-    total: mockAssets.filter((a) => a.category === cat).length,
-    operativo: mockAssets.filter((a) => a.category === cat && a.status === "Operativo").length,
-    falla: mockAssets.filter((a) => a.category === cat && (a.status === "Falla" || a.status === "Vencido")).length,
-  })).filter((c) => c.total > 0);
+    total: assets.filter((a) => a.category === cat).length,
+    operativo: assets.filter((a) => a.category === cat && a.status === "Operativo").length,
+    falla: assets.filter((a) => a.category === cat && (a.status === "Falla" || a.status === "Vencido")).length,
+  })).filter((c) => c.total > 0), [assets]);
 
   // Asset status distribution
-  const assetStatusData = [
-    { name: "Operativo", value: mockAssets.filter((a) => a.status === "Operativo").length, color: "#10b981" },
-    { name: "En Mantención", value: mockAssets.filter((a) => a.status === "En Mantenimiento").length, color: "#f59e0b" },
-    { name: "Falla", value: mockAssets.filter((a) => a.status === "Falla").length, color: "#ef4444" },
-    { name: "Vencido", value: mockAssets.filter((a) => a.status === "Vencido").length, color: "#dc2626" },
-  ].filter((d) => d.value > 0);
+  const assetStatusData = useMemo(() => [
+    { name: "Operativo", value: assets.filter((a) => a.status === "Operativo").length, color: "#10b981" },
+    { name: "En Mantención", value: assets.filter((a) => a.status === "En Mantenimiento").length, color: "#f59e0b" },
+    { name: "Falla", value: assets.filter((a) => a.status === "Falla").length, color: "#ef4444" },
+    { name: "Vencido", value: assets.filter((a) => a.status === "Vencido").length, color: "#dc2626" },
+  ].filter((d) => d.value > 0), [assets]);
 
   // Incidents by priority
-  const incidentsByPriority = [
-    { name: "Crítica", value: mockIncidents.filter((i) => i.priority === "Crítica").length, color: "#ef4444" },
-    { name: "Alta", value: mockIncidents.filter((i) => i.priority === "Alta").length, color: "#f97316" },
-    { name: "Media", value: mockIncidents.filter((i) => i.priority === "Media").length, color: "#f59e0b" },
-    { name: "Baja", value: mockIncidents.filter((i) => i.priority === "Baja").length, color: "#3b82f6" },
-  ];
+  const incidentsByPriority = useMemo(() => [
+    { name: "Crítica", value: incidents.filter((i) => i.priority === "Crítica").length, color: "#ef4444" },
+    { name: "Alta", value: incidents.filter((i) => i.priority === "Alta").length, color: "#f97316" },
+    { name: "Media", value: incidents.filter((i) => i.priority === "Media").length, color: "#f59e0b" },
+    { name: "Baja", value: incidents.filter((i) => i.priority === "Baja").length, color: "#3b82f6" },
+  ], [incidents]);
 
   // Incidents by month (simulated)
   const incidentsByMonth = [
@@ -47,13 +64,21 @@ export function Reports() {
   ];
 
   // Documents by type
-  const docsByType = [
-    { name: "Manual", value: mockDocuments.filter((d) => d.type === "Manual").length },
-    { name: "Certificado", value: mockDocuments.filter((d) => d.type === "Certificado").length },
-    { name: "Contrato", value: mockDocuments.filter((d) => d.type === "Contrato").length },
-    { name: "Informe", value: mockDocuments.filter((d) => d.type === "Informe Técnico").length },
-    { name: "Plano", value: mockDocuments.filter((d) => d.type === "Plano").length },
-  ];
+  const docsByType = useMemo(() => [
+    { name: "Manual", value: documents.filter((d) => d.type === "Manual").length },
+    { name: "Certificado", value: documents.filter((d) => d.type === "Certificado").length },
+    { name: "Contrato", value: documents.filter((d) => d.type === "Contrato").length },
+    { name: "Informe", value: documents.filter((d) => d.type === "Informe Técnico").length },
+    { name: "Plano", value: documents.filter((d) => d.type === "Plano").length },
+  ], [documents]);
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center h-64">
+        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const reportTypes = [
     { icon: <Package2 size={20} className="text-blue-600" />, iconBg: "bg-blue-100", title: "Activos Registrados", desc: "Inventario completo por categoría y estado", badge: "PDF · Excel" },
