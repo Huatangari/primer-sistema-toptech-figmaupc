@@ -1,5 +1,8 @@
 import { AssetStatus, IncidentPriority, IncidentStatus, DocumentType, ProviderStatus } from "../types";
 
+// ─── Re-export cn from ui/utils to provide a single import point ─────────────
+export { cn } from "../../app/components/ui/utils";
+
 // ─── Date formatting ─────────────────────────────────────────────────────────
 
 export function formatDate(dateString: string): string {
@@ -22,7 +25,7 @@ export function formatDateTime(dateString: string): string {
 
 export function timeAgo(dateString: string): string {
   const date = new Date(dateString);
-  const now = new Date("2025-03-10T00:00:00Z");
+  const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
