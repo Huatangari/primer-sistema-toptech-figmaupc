@@ -56,6 +56,7 @@ export function IncidentDetail() {
   }
 
   const isOpen = incident.status === "Abierta" || incident.status === "En Proceso";
+  const isResolved = incident.status === "Resuelta" || incident.status === "Cerrada";
 
   const handleConfirmClose = async () => {
     if (!incident || isClosing) return;
@@ -127,7 +128,7 @@ export function IncidentDetail() {
               </button>
             </div>
           )}
-          {incident.status === "Resuelta" && (
+          {isResolved && (
             <div className="flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl px-4 py-2">
               <CheckCircle size={16} className="text-emerald-400" />
               <div>

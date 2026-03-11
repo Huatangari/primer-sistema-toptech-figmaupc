@@ -22,7 +22,7 @@ SaaS multi-tenant para la gestión técnica de edificios residenciales. Permite 
 
 - Node.js 18 o superior
 - npm 9 o superior
-- Cuenta en [Supabase](https://supabase.com) *(opcional para modo demo)*
+- Cuenta en [Supabase](https://supabase.com)
 
 ---
 
@@ -39,6 +39,7 @@ npm install
 # 3. Configurar variables de entorno
 cp .env.example .env.local
 # Edita .env.local con tus credenciales de Supabase
+# (opcional) VITE_ALLOW_DEMO_MODE=true para demo local sin backend
 
 # 4. Iniciar en desarrollo
 npm run dev
@@ -46,7 +47,8 @@ npm run dev
 
 La aplicación estará disponible en `http://localhost:5173`
 
-> **Sin Supabase configurado:** la app funciona en modo demo con datos mock locales.
+> **Sin Supabase configurado:** la app queda bloqueada por seguridad.
+> Para presentaciones locales sin backend, activa `VITE_ALLOW_DEMO_MODE=true`.
 
 ---
 
@@ -80,6 +82,9 @@ supabase functions deploy create-incident
 ```
 
 Funciones disponibles: `create-incident`, `close-incident`, `upload-document`, `asset-maintenance-log`.
+
+Configura `ALLOWED_ORIGINS` en Supabase Functions para restringir CORS en producción
+(lista separada por comas).
 
 ---
 

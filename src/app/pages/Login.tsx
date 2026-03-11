@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { Building2, Eye, EyeOff, Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
 import { login } from "../../lib/auth/authClient";
-import { IS_SUPABASE_CONFIGURED } from "../../lib/auth/authClient";
+import { IS_DEMO_MODE_ENABLED, IS_SUPABASE_CONFIGURED } from "../../lib/auth/authClient";
 
 export function Login() {
   const navigate = useNavigate();
@@ -11,14 +11,21 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const authUnavailable = !IS_SUPABASE_CONFIGURED && !IS_DEMO_MODE_ENABLED;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    // Modo demo sin Supabase configurado
-    if (!IS_SUPABASE_CONFIGURED) {
+    if (authUnavailable) {
+      setError("Supabase no esta configurado. Completa .env.local o habilita VITE_ALLOW_DEMO_MODE=true.");
+      setLoading(false);
+      return;
+    }
+
+    // Modo demo explicitamente habilitado
+    if (!IS_SUPABASE_CONFIGURED && IS_DEMO_MODE_ENABLED) {
       setTimeout(() => navigate("/"), 900);
       return;
     }
@@ -27,7 +34,7 @@ export function Login() {
       await login(email, password);
       navigate("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al iniciar sesión");
+      setError(err instanceof Error ? err.message : "Error al iniciar sesion");
       setLoading(false);
     }
   };
@@ -49,15 +56,17 @@ export function Login() {
             </div>
             <div>
               <p className="text-white font-bold text-lg">BuildTrack</p>
-              <p className="text-blue-300 text-xs">Gestión Técnica de Edificios</p>
+              <p className="text-blue-300 text-xs">Gestion Tecnica de Edificios</p>
             </div>
           </div>
 
           <h2 className="text-white mb-4 text-[32px] font-bold leading-tight">
-            Control total<br />de tu edificio
+            Control total
+            <br />
+            de tu edificio
           </h2>
           <p className="text-slate-400 text-[15px] leading-[1.7]">
-            Centraliza activos, incidencias, documentos y proveedores en una sola plataforma diseñada para la gestión técnica profesional.
+            Centraliza activos, incidencias, documentos y proveedores en una sola plataforma disenada para la gestion tecnica profesional.
           </p>
         </div>
 
@@ -65,7 +74,7 @@ export function Login() {
         <div className="relative space-y-3">
           {[
             "Registro y trazabilidad de activos",
-            "Gestión de incidencias en tiempo real",
+            "Gestion de incidencias en tiempo real",
             "Repositorio documental centralizado",
             "Dashboard ejecutivo con KPIs",
           ].map((feat) => (
@@ -78,7 +87,7 @@ export function Login() {
           ))}
         </div>
 
-        <p className="relative text-slate-600 text-xs">© 2025 BuildTrack · Versión Demo</p>
+        <p className="relative text-slate-600 text-xs">� 2026 BuildTrack � Version Demo</p>
       </div>
 
       {/* Right panel - form */}
@@ -93,10 +102,8 @@ export function Login() {
           </div>
 
           <div className="mb-8">
-            <h1 className="text-white mb-1 text-[26px] font-bold">
-              Iniciar sesión
-            </h1>
-            <p className="text-slate-400 text-sm">Accede a tu panel de gestión técnica</p>
+            <h1 className="text-white mb-1 text-[26px] font-bold">Iniciar sesion</h1>
+            <p className="text-slate-400 text-sm">Accede a tu panel de gestion tecnica</p>
           </div>
 
           {/* Demo badge o error */}
@@ -108,7 +115,11 @@ export function Login() {
           ) : (
             <div className="mb-6 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
               <p className="text-blue-400 text-xs font-medium">
-                {IS_SUPABASE_CONFIGURED ? "🔒 Ingresa con tus credenciales" : "🔒 Modo demo — credenciales pre-cargadas"}
+                {authUnavailable
+                  ? "Configuracion requerida para autenticar"
+                  : IS_SUPABASE_CONFIGURED
+                    ? "Ingresa con tus credenciales"
+                    : "Modo demo habilitado por VITE_ALLOW_DEMO_MODE"}
               </p>
             </div>
           )}
@@ -117,7 +128,7 @@ export function Login() {
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-slate-300 text-sm font-medium mb-1.5">
-                Correo electrónico
+                Correo electronico
               </label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -135,7 +146,7 @@ export function Login() {
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-slate-300 text-sm font-medium mb-1.5">
-                Contraseña
+                Contrasena
               </label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -145,7 +156,7 @@ export function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-slate-800/80 border border-slate-700 text-white rounded-lg pl-10 pr-10 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all"
-                  placeholder="••••••••"
+                  placeholder="********"
                 />
                 <button
                   type="button"
@@ -160,7 +171,7 @@ export function Login() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || authUnavailable}
               className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-70 text-white rounded-lg py-2.5 text-sm font-semibold flex items-center justify-center gap-2 transition-all mt-2"
             >
               {loading ? (
@@ -178,8 +189,9 @@ export function Login() {
           </form>
 
           <p className="text-slate-600 text-xs text-center mt-8">
-            Esta es una demo para presentación comercial.
-            <br />No almacena datos reales.
+            Esta es una demo para presentacion comercial.
+            <br />
+            No almacena datos reales.
           </p>
         </div>
       </div>
