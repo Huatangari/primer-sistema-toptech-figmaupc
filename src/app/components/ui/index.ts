@@ -1,38 +1,37 @@
 /**
  * UI Component Library
- * 
+ *
  * Barrel export for all reusable UI components.
- * These are styled components using CSS Modules and Tailwind.
+ * All components use named exports — no default exports in this project.
  */
 
 // Buttons
-export { default as Button } from './button';
+export { Button, buttonVariants } from './button';
 
 // Inputs & Forms
-export { default as Input } from './input';
-export { default as Label } from './label';
-export { default as Select } from './select';
-export { default as Checkbox } from './checkbox';
+export { Input } from './input';
+export { Label } from './label';
+export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
+export { Checkbox } from './checkbox';
 
 // Cards & Containers
-export { default as Card } from './card';
-export { default as Dialog } from './dialog';
-export { default as Drawer } from './drawer';
-export { default as Sheet } from './sheet';
+export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './card';
+export { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './dialog';
+export { Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from './drawer';
+export { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from './sheet';
 
 // Data Display
-export { default as Badge } from './badge';
-export { default as Avatar } from './avatar';
-export { default as Tabs } from './tabs';
-export { default as Table } from './table';
+export { Badge, badgeVariants } from './badge';
+export { Avatar, AvatarFallback, AvatarImage } from './avatar';
+export { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
+export { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from './table';
 
 // Loading & Feedback
-export { default as Skeleton } from './skeleton';
-export { default as Progress } from './progress';
+export { Skeleton } from './skeleton';
+export { Progress } from './progress';
 
 // Navigation
-export { default as Breadcrumb } from './breadcrumb';
-export { default as Separator } from './separator';
+export { Separator } from './separator';
 
 // Utilities
 export { cn } from './utils';
