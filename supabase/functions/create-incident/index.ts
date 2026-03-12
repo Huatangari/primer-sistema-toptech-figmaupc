@@ -12,6 +12,9 @@ import { requireAuth, createServiceClient } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return handleCors(req);
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Metodo no permitido" }, 405, req);
+  }
 
   try {
     // 1. Autenticar usuario

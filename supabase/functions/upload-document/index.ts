@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Edge Function: upload-document
  * Registra metadatos de un documento ya subido a Supabase Storage.
  * El archivo debe subirse primero con supabase.storage.from('documents').upload()
@@ -13,6 +13,9 @@ import { requireAuth, requireBuildingAccess, createServiceClient } from "../_sha
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return handleCors(req);
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Metodo no permitido" }, 405, req);
+  }
 
   try {
     const { user, client } = await requireAuth(req);

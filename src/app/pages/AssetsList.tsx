@@ -170,8 +170,8 @@ export function AssetsList() {
               <button
                 key={status}
                 type="button"
+                ref={(el) => { if (el) el.setAttribute('aria-pressed', String(isActive)); }}
                 onClick={() => handleStatusToggle(status)}
-                aria-pressed={isActive ? "true" : "false"}
                 className={`${styles.chip} ${isActive ? styles.chipActive : styles.chipInactive}`}
               >
                 <span className={`${styles.chipDot} ${dotClass}`} aria-hidden="true" />

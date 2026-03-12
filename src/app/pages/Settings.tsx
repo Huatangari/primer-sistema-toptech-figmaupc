@@ -57,7 +57,8 @@ function Toggle({ defaultEnabled }: { defaultEnabled: boolean }) {
     <button
       type="button"
       role="switch"
-      aria-checked={enabled ? "true" : "false"}
+      aria-checked="false"
+      ref={(el) => { if (el) el.setAttribute('aria-checked', String(enabled)); }}
       aria-label={enabled ? "Desactivar notificacion" : "Activar notificacion"}
       onClick={() => setEnabled(!enabled)}
       className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full transition-colors duration-200 ${
@@ -81,6 +82,26 @@ function downloadJson(filename: string, payload: unknown) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function clearStorageByPrefix(storage: Storage, prefixes: readonly string[]) {
+  const keysToRemove: string[] = [];
+  for (let index = 0; index < storage.length; index += 1) {
+    const key = storage.key(index);
+    if (!key) continue;
+    if (prefixes.some((prefix) => key.startsWith(prefix))) {
+      keysToRemove.push(key);
+    }
+  }
+
+  keysToRemove.forEach((key) => storage.removeItem(key));
+}
+
+function resetDemoSessionStorage() {
+  // Only clear app/supabase keys. Avoid wiping unrelated app data in same origin.
+  const prefixes = ["sb-", "supabase.", "toptech.", "buildtrack."];
+  clearStorageByPrefix(window.localStorage, prefixes);
+  clearStorageByPrefix(window.sessionStorage, prefixes);
 }
 
 export function Settings() {
@@ -123,8 +144,7 @@ export function Settings() {
       return;
     }
 
-    localStorage.clear();
-    sessionStorage.clear();
+    resetDemoSessionStorage();
     setActionMessage("Demo restablecida. Recargando vista...");
     setTimeout(() => window.location.reload(), 900);
   };
@@ -361,4 +381,3 @@ export function Settings() {
     </div>
   );
 }
-

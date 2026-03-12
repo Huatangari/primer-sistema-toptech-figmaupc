@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [develop, main, master]
+    branches: [develop, main, hotfix/**]
   pull_request:
-    branches: [develop, main, master]
+    branches: [develop, main]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -39,7 +39,7 @@ jobs:
         run: npm ci
 
       - name: TypeScript type-check
-        run: npx tsc --noEmit
+        run: npm run typecheck
 
       - name: ESLint
         run: npm run lint

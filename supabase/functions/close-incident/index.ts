@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Edge Function: close-incident
  * Marca una incidencia como resuelta y registra el evento de resolucion.
  *
@@ -12,6 +12,9 @@ import { requireAuth, createServiceClient } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return handleCors(req);
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Metodo no permitido" }, 405, req);
+  }
 
   try {
     const { user, client } = await requireAuth(req);
@@ -58,7 +61,7 @@ serve(async (req) => {
     await serviceClient.from("incident_events").insert({
       incident_id,
       building_id: incident.building_id,
-      type: "Resoluci�n",
+      type: "Resolución",
       description: resolution_notes
         ? `Incidencia resuelta por ${user.email ?? user.id}. Notas: ${resolution_notes}`
         : `Incidencia resuelta por ${user.email ?? user.id}.`,

@@ -1,4 +1,4 @@
-## Descripción
+﻿## Descripción
 
 <!-- Explica brevemente qué hace este PR y por qué es necesario. -->
 
@@ -31,7 +31,7 @@
 
 ## Checklist
 
-- [ ] El PR apunta a `develop` (no a `master`)
+- [ ] El PR apunta a `develop` (o a `main` solo para `hotfix/*`)
 - [ ] Los commits siguen la convención (`feat:`, `fix:`, etc.)
 - [ ] No se incluyen archivos `.env.local` ni credenciales
 - [ ] La documentación fue actualizada si aplica
