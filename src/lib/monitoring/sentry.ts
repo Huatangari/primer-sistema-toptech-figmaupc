@@ -1,8 +1,8 @@
 import * as Sentry from "@sentry/react";
 
-const DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
+const DSN = import.meta.env.VITE_SENTRY_DSN;
 const ENV = import.meta.env.VITE_APP_ENV ?? "development";
-const RELEASE = import.meta.env.VITE_APP_VERSION as string | undefined;
+const RELEASE = import.meta.env.VITE_APP_VERSION;
 
 export function initSentry() {
   if (!DSN) return; // no DSN → silently skip (dev / demo mode)

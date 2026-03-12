@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from "react-router";
+import { useMemo, useState } from "react";
 import {
   LayoutDashboard,
   Package2,
@@ -10,7 +11,10 @@ import {
   Building2,
   ChevronRight,
   X,
+  LogOut,
 } from "lucide-react";
+import { useAuthContext } from "../../../lib/auth/AuthProvider";
+import { supabase } from "../../../lib/auth/authClient";
 
 interface NavItem {
   label: string;
@@ -35,6 +39,28 @@ interface SidebarProps {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const location = useLocation();
+  const { user } = useAuthContext();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const userName = useMemo(() => {
+    const metadataName = user?.user_metadata?.full_name as string | undefined;
+    if (metadataName) return metadataName;
+    if (user?.email) return user.email.split("@")[0];
+    return "Usuario";
+  }, [user]);
+
+  const userEmail = user?.email ?? "sin-email";
+  const avatarLetter = userEmail.charAt(0).toUpperCase() || "U";
+
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      window.location.href = "/login";
+    }
+  };
 
   return (
     <>
@@ -118,13 +144,22 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         <div className="px-4 py-4 border-t border-slate-700/50">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm" style={{ fontWeight: 600 }}>
-              A
+              {avatarLetter}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white text-sm truncate" style={{ fontWeight: 500 }}>Admin Edificio</p>
-              <p className="text-slate-400 truncate" style={{ fontSize: "12px" }}>admin@torresdelparque.com</p>
+              <p className="text-white text-sm truncate" style={{ fontWeight: 500 }}>{userName}</p>
+              <p className="text-slate-400 truncate" style={{ fontSize: "12px" }}>{userEmail}</p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="mt-3 w-full flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-2 text-sm text-slate-200 hover:bg-slate-700 disabled:opacity-60 transition-colors"
+          >
+            <LogOut size={15} />
+            {loggingOut ? "Cerrando sesion..." : "Cerrar sesion"}
+          </button>
         </div>
       </aside>
     </>

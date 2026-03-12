@@ -5,12 +5,12 @@ import { ProtectedRoute } from "./ProtectedRoute";
 
 const authState = {
   user: null as { id: string } | null,
+  session: null as { access_token: string } | null,
   loading: false,
 };
 
 const authFlags = {
   configured: true,
-  bypass: false,
 };
 
 vi.mock("../../lib/auth/AuthProvider", () => ({
@@ -21,17 +21,14 @@ vi.mock("../../lib/auth/authClient", () => ({
   get IS_SUPABASE_CONFIGURED() {
     return authFlags.configured;
   },
-  get IS_AUTH_BYPASS_ENABLED() {
-    return authFlags.bypass;
-  },
 }));
 
 describe("ProtectedRoute", () => {
   beforeEach(() => {
     authState.user = null;
+    authState.session = null;
     authState.loading = false;
     authFlags.configured = true;
-    authFlags.bypass = false;
   });
 
   it("redirige a login cuando no hay sesion", async () => {
@@ -51,6 +48,7 @@ describe("ProtectedRoute", () => {
 
   it("permite acceso cuando hay usuario autenticado", async () => {
     authState.user = { id: "usr-1" };
+    authState.session = { access_token: "token" };
 
     render(
       <MemoryRouter initialEntries={["/"]}>
@@ -66,9 +64,8 @@ describe("ProtectedRoute", () => {
     expect(await screen.findByText("Private Area")).toBeTruthy();
   });
 
-  it("permite acceso en bypass de demo", async () => {
+  it("redirige a login cuando Supabase no esta configurado", async () => {
     authFlags.configured = false;
-    authFlags.bypass = true;
 
     render(
       <MemoryRouter initialEntries={["/"]}>
@@ -81,6 +78,6 @@ describe("ProtectedRoute", () => {
       </MemoryRouter>
     );
 
-    expect(await screen.findByText("Private Area")).toBeTruthy();
+    expect(await screen.findByText("Login Screen")).toBeTruthy();
   });
 });

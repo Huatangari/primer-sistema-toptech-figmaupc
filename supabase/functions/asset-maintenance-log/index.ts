@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Edge Function: asset-maintenance-log
  * Registra un evento de mantenimiento en el historial de un activo
  * y actualiza la fecha de ultimo mantenimiento.
@@ -13,6 +13,9 @@ import { requireAuth, createServiceClient } from "../_shared/auth.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return handleCors(req);
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Metodo no permitido" }, 405, req);
+  }
 
   try {
     const { client } = await requireAuth(req);

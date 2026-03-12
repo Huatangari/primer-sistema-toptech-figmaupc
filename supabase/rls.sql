@@ -13,10 +13,21 @@
 -- 1. FUNCIONES HELPER
 -- security definer = se ejecutan con los permisos del creador, no del llamador.
 -- Esto evita el bucle RLS cuando building_users también tiene RLS activo.
+--
+-- DROP previo necesario porque schema.sql usó nombres de parámetro distintos
+-- y PostgreSQL no permite cambiarlos con CREATE OR REPLACE.
 -- -----------------------------------------------------------------------------
 
+drop function if exists is_building_member(uuid) cascade;
+drop function if exists has_building_role(uuid, user_role[]) cascade;
+
 create or replace function is_building_member(bid uuid)
-returns boolean language sql security definer stable as $$
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
   select exists (
     select 1 from building_users
     where user_id = auth.uid() and building_id = bid
@@ -24,21 +35,46 @@ returns boolean language sql security definer stable as $$
 $$;
 
 create or replace function building_role(bid uuid)
-returns text language sql security definer stable as $$
+returns text
+language sql
+security definer
+stable
+set search_path = public
+as $$
   select role::text from building_users
   where user_id = auth.uid() and building_id = bid
   limit 1
 $$;
 
 create or replace function is_building_admin(bid uuid)
-returns boolean language sql security definer stable as $$
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
   select coalesce(building_role(bid) = 'admin', false)
 $$;
 
 create or replace function can_write(bid uuid)
-returns boolean language sql security definer stable as $$
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
   select coalesce(building_role(bid) in ('admin', 'technician'), false)
 $$;
+
+revoke all on function is_building_member(uuid) from public;
+revoke all on function building_role(uuid) from public;
+revoke all on function is_building_admin(uuid) from public;
+revoke all on function can_write(uuid) from public;
+
+grant execute on function is_building_member(uuid) to authenticated;
+grant execute on function building_role(uuid) to authenticated;
+grant execute on function is_building_admin(uuid) to authenticated;
+grant execute on function can_write(uuid) to authenticated;
 
 
 -- -----------------------------------------------------------------------------
@@ -81,7 +117,25 @@ $$;
 -- Los usuarios ven solo sus propias membresías.
 -- Solo admins pueden gestionar membresías de su edificio.
 
+alter table buildings enable row level security;
 alter table building_users enable row level security;
+alter table providers enable row level security;
+alter table provider_categories enable row level security;
+alter table assets enable row level security;
+alter table asset_history enable row level security;
+alter table incidents enable row level security;
+alter table incident_events enable row level security;
+alter table documents enable row level security;
+
+alter table buildings force row level security;
+alter table building_users force row level security;
+alter table providers force row level security;
+alter table provider_categories force row level security;
+alter table assets force row level security;
+alter table asset_history force row level security;
+alter table incidents force row level security;
+alter table incident_events force row level security;
+alter table documents force row level security;
 
 create policy "building_users_select_own"
   on building_users for select
@@ -268,4 +322,3 @@ create policy "documents_delete_admin"
 -- documents        CRUD    CRU          R
 -- building_users   CRUD    R(own)       R(own)
 -- =============================================================================
-

@@ -19,7 +19,7 @@
 -- 1. EXTENSIONS
 -- -----------------------------------------------------------------------------
 
-create extension if not exists "uuid-ossp";
+create extension if not exists pgcrypto;
 
 
 -- -----------------------------------------------------------------------------
@@ -104,8 +104,8 @@ create table buildings (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   address     text,
-  floors      integer,
-  units       integer,
+  floors      integer check (floors is null or floors >= 0),
+  units       integer check (units is null or units >= 0),
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
@@ -147,7 +147,7 @@ create table providers (
   name            text not null,
   rubro           text not null,
   contact_name    text not null,
-  contact_email   text not null,
+  contact_email   text not null check (position('@' in contact_email) > 1),
   contact_phone   text not null,
   status          provider_status not null default 'Activo',
   last_service    date,
@@ -203,7 +203,23 @@ create table assets (
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now(),
 
-  unique (building_id, code)
+  unique (building_id, code),
+  unique (id, building_id),
+  check (
+    next_maintenance is null
+    or installation_date is null
+    or next_maintenance >= installation_date
+  ),
+  check (
+    last_maintenance is null
+    or installation_date is null
+    or last_maintenance >= installation_date
+  ),
+  check (
+    next_maintenance is null
+    or last_maintenance is null
+    or next_maintenance >= last_maintenance
+  )
 );
 
 comment on table assets is
@@ -216,7 +232,7 @@ comment on table assets is
 
 create table asset_history (
   id           uuid primary key default gen_random_uuid(),
-  asset_id     uuid not null references assets(id) on delete cascade,
+  asset_id     uuid not null,
   building_id  uuid not null references buildings(id) on delete cascade,
 
   date         timestamptz not null default now(),
@@ -225,7 +241,11 @@ create table asset_history (
   description  text not null default '',
   technician   text not null,
 
-  created_at   timestamptz not null default now()
+  created_at   timestamptz not null default now(),
+
+  foreign key (asset_id, building_id)
+    references assets(id, building_id)
+    on delete cascade
 );
 
 comment on table asset_history is
@@ -256,7 +276,12 @@ create table incidents (
   updated_at   timestamptz not null default now(),
   resolved_at  timestamptz,                       -- optional
 
-  unique (building_id, code)
+  unique (building_id, code),
+  unique (id, building_id),
+  check (
+    resolved_at is null
+    or status in ('Resuelta', 'Cerrada')
+  )
 );
 
 comment on table incidents is
@@ -269,7 +294,7 @@ comment on table incidents is
 
 create table incident_events (
   id           uuid primary key default gen_random_uuid(),
-  incident_id  uuid not null references incidents(id) on delete cascade,
+  incident_id  uuid not null,
   building_id  uuid not null references buildings(id) on delete cascade,
 
   date         timestamptz not null default now(),
@@ -277,7 +302,11 @@ create table incident_events (
   description  text not null default '',
   author       text not null,
 
-  created_at   timestamptz not null default now()
+  created_at   timestamptz not null default now(),
+
+  foreign key (incident_id, building_id)
+    references incidents(id, building_id)
+    on delete cascade
 );
 
 comment on table incident_events is
@@ -409,6 +438,16 @@ alter table incidents           enable row level security;
 alter table incident_events     enable row level security;
 alter table documents           enable row level security;
 
+alter table buildings           force row level security;
+alter table building_users      force row level security;
+alter table providers           force row level security;
+alter table provider_categories force row level security;
+alter table assets              force row level security;
+alter table asset_history       force row level security;
+alter table incidents           force row level security;
+alter table incident_events     force row level security;
+alter table documents           force row level security;
+
 -- Helpers multi-tenant para validar membresia y roles por edificio.
 -- SECURITY DEFINER evita recursion cuando la policy consulta building_users.
 create or replace function is_building_member(target_building uuid)
@@ -441,6 +480,11 @@ as $$
       and bu.role = any(allowed_roles)
   );
 $$;
+
+revoke all on function is_building_member(uuid) from public;
+revoke all on function has_building_role(uuid, user_role[]) from public;
+grant execute on function is_building_member(uuid) to authenticated;
+grant execute on function has_building_role(uuid, user_role[]) to authenticated;
 
 -- Limpieza de politicas abiertas anteriores (dev_all_*)
 drop policy if exists "dev_all_buildings" on buildings;

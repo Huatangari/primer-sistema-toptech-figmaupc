@@ -1,17 +1,14 @@
 import { Navigate, Outlet } from "react-router";
 import { useAuthContext } from "../../lib/auth/AuthProvider";
-import { IS_AUTH_BYPASS_ENABLED, IS_SUPABASE_CONFIGURED } from "../../lib/auth/authClient";
+import { IS_SUPABASE_CONFIGURED } from "../../lib/auth/authClient";
 
 /**
  * Protege rutas privadas.
- * - Demo explicitamente habilitada: acceso libre sin Supabase.
  * - Supabase configurado: requiere sesion activa.
- * - Sin Supabase y sin demo: bloquea acceso y redirige a /login.
+ * - Sin Supabase: bloquea acceso y redirige a /login.
  */
 export function ProtectedRoute() {
-  const { user, loading } = useAuthContext();
-
-  if (IS_AUTH_BYPASS_ENABLED) return <Outlet />;
+  const { session, loading } = useAuthContext();
 
   if (!IS_SUPABASE_CONFIGURED) return <Navigate to="/login" replace />;
 
@@ -23,7 +20,7 @@ export function ProtectedRoute() {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!session) return <Navigate to="/login" replace />;
 
   return <Outlet />;
 }

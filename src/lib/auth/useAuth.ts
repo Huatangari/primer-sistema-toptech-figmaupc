@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import { IS_SUPABASE_CONFIGURED, supabase } from "./authClient";
 import { identifyUser, clearUser } from "../monitoring/sentry";
+import { clearActiveBuildingIdCache } from "../services/building";
 
 export interface AuthState {
   user: User | null;
@@ -20,16 +21,31 @@ export function useAuth(): AuthState {
 
   useEffect(() => {
     if (!IS_SUPABASE_CONFIGURED) {
+      clearActiveBuildingIdCache();
+      clearUser();
       setLoading(false);
       return;
     }
 
     // Carga inicial desde localStorage (sincronica via getSession)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (!session?.user) {
+          clearActiveBuildingIdCache();
+          clearUser();
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setSession(null);
+        setUser(null);
+        clearActiveBuildingIdCache();
+        clearUser();
+        setLoading(false);
+      });
 
     // Escucha cambios: login, logout, token refresh, etc.
     const {
@@ -38,6 +54,7 @@ export function useAuth(): AuthState {
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       setLoading(false);
+      clearActiveBuildingIdCache();
       if (nextSession?.user) {
         identifyUser(nextSession.user.id, nextSession.user.email);
       } else {

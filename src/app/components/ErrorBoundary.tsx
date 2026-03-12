@@ -1,19 +1,22 @@
 import * as Sentry from "@sentry/react";
 
 interface FallbackProps {
-  error: Error;
+  error: unknown;
   resetError: () => void;
 }
 
 function ErrorFallback({ error, resetError }: FallbackProps) {
+  const message =
+    error instanceof Error && error.message
+      ? error.message
+      : "Error inesperado. El equipo ha sido notificado.";
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
       <h1 className="text-2xl font-semibold text-destructive">
         Algo salió mal
       </h1>
-      <p className="max-w-md text-sm text-muted-foreground">
-        {error.message || "Error inesperado. El equipo ha sido notificado."}
-      </p>
+      <p className="max-w-md text-sm text-muted-foreground">{message}</p>
       <button
         type="button"
         onClick={resetError}

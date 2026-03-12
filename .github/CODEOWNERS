@@ -1,0 +1,8 @@
+# Global fallback owner
+* @Huatangari
+
+# Critical paths
+/supabase/ @Huatangari
+/.github/workflows/ @Huatangari
+/src/lib/auth/ @Huatangari
+/src/lib/api/ @Huatangari

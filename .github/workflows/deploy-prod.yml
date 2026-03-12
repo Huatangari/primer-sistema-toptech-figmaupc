@@ -2,7 +2,7 @@ name: Deploy Production
 
 on:
   push:
-    branches: [master, main]
+    branches: [main]
   workflow_dispatch:
     inputs:
       confirm:
@@ -57,6 +57,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Lint
+        run: npm run lint:all
+
+      - name: Type-check
+        run: npm run typecheck
 
       - name: Unit tests
         run: npm test

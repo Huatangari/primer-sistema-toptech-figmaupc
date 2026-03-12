@@ -1,153 +1,101 @@
-# Guía de Contribución — BuildTrack
+﻿# Guia de Contribucion - BuildTrack
 
-Gracias por contribuir al proyecto. Este documento explica el flujo de trabajo del equipo.
-
----
+Este repositorio usa un flujo Git orientado a equipos.
 
 ## Estrategia de ramas
 
-```
-main        ← producción (solo merge desde release/*)
-develop     ← integración continua (base para features)
-feature/*   ← nuevas funcionalidades
-bugfix/*    ← corrección de errores
-release/*   ← preparación de versiones
-```
+- `main`: rama estable de produccion.
+- `develop`: rama de integracion continua.
+- `feature/*`: nuevas funcionalidades.
+- `fix/*`: correcciones no criticas.
+- `hotfix/*`: correcciones urgentes para produccion.
 
-**Reglas:**
-- Nunca hacer push directo a `main` ni a `develop`.
-- Todo cambio entra por Pull Request con al menos 1 aprobación.
-- `main` solo recibe merges desde `release/*`.
-
----
+Reglas:
+- No hacer push directo a `main` ni a `develop`.
+- Todo cambio entra por Pull Request.
+- Requerir al menos 1 aprobacion para merge.
+- `hotfix/*` puede abrir PR directo a `main` y luego debe sincronizarse en `develop`.
 
 ## Flujo de trabajo
 
-### 1. Crear una rama
+1. Crear rama desde `develop`
 
 ```bash
-# Asegúrate de partir siempre desde develop actualizado
 git checkout develop
 git pull origin develop
 
-# Feature nueva
-git checkout -b feature/nombre-descriptivo
-
-# Corrección de bug
-git checkout -b bugfix/descripcion-del-bug
+git checkout -b feature/nombre-corto
+# o
+git checkout -b fix/descripcion-corta
 ```
 
-### 2. Desarrollar
-
-- Trabaja en tu rama local.
-- Haz commits pequeños y frecuentes con mensajes claros.
-- Mantén la rama actualizada con develop:
+2. Ejecutar validaciones locales
 
 ```bash
-git fetch origin
-git rebase origin/develop
+npm run lint:all
+npm run typecheck
+npm test
+npm run build
 ```
 
-### 3. Hacer commits
+3. Commits con Conventional Commits
 
-Seguimos la convención [Conventional Commits](https://www.conventionalcommits.org/):
+Formato:
 
-```
-<tipo>: <descripción corta en imperativo>
-
-[cuerpo opcional]
+```text
+<tipo>(<scope opcional>): <descripcion>
 ```
 
-**Tipos válidos:**
+Tipos recomendados:
+- `feat`, `fix`, `refactor`, `docs`, `chore`, `test`, `style`, `perf`, `ci`, `revert`
 
-| Tipo | Cuándo usarlo |
-|---|---|
-| `feat` | Nueva funcionalidad |
-| `fix` | Corrección de bug |
-| `refactor` | Mejora interna sin cambio de comportamiento |
-| `docs` | Documentación |
-| `chore` | Tareas técnicas (deps, config, build) |
-| `test` | Tests |
-| `style` | Formato/lint (sin lógica) |
-
-**Ejemplos:**
+Ejemplos:
 
 ```bash
-git commit -m "feat: agregar filtro por prioridad en IncidentsList"
-git commit -m "fix: corregir fecha hardcodeada en timeAgo()"
-git commit -m "docs: actualizar README con instrucciones de Supabase"
-git commit -m "chore: actualizar dependencias de Radix UI"
+git commit -m "feat(assets): agregar filtro por categoria"
+git commit -m "fix(auth): manejar sesion expirada"
+git commit -m "chore(ci): agregar typecheck a deploy staging"
 ```
 
-### 4. Subir la rama
+4. Publicar y abrir PR
 
 ```bash
-git push origin feature/nombre-descriptivo
+git push origin feature/nombre-corto
 ```
 
-### 5. Crear Pull Request
+- Base normal: `develop`
+- Base para hotfix: `main`
 
-1. Ve a GitHub → **Pull Requests** → **New pull request**
-2. Base: `develop` ← Compare: `feature/tu-rama`
-3. Completa el título y descripción
-4. Asigna al menos 1 revisor
-5. Espera la aprobación antes de hacer merge
+5. Merge
 
----
+- Squash merge recomendado.
+- Verificar que CI este en verde antes de merge.
 
-## Preparar una release
+## Hotfix a produccion
 
 ```bash
-# Desde develop
-git checkout -b release/1.2.0
-
-# Ajustes finales (versión, changelog, etc.)
-# ...
-
-# Merge a main y a develop
-git checkout main && git merge release/1.2.0
-git checkout develop && git merge release/1.2.0
-
-# Tag en main
-git tag -a v1.2.0 -m "Release 1.2.0"
-git push origin main develop --tags
+git checkout main
+git pull origin main
+git checkout -b hotfix/descripcion-corta
 ```
 
----
+Despues del merge a `main`, crear PR adicional `main -> develop` para evitar drift.
 
-## Configuración del entorno local
+## Estandares de calidad
 
-```bash
-# 1. Clonar y entrar al proyecto
-git clone https://github.com/Huatangari/primer-sistema-toptech-figmaupc.git
-cd primer-sistema-toptech-figmaupc
+Antes de pedir review:
+- `npm run lint:all`
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
 
-# 2. Instalar dependencias
-npm install
+Hooks locales:
+- `pre-commit`: `lint-staged`
+- `pre-push`: `typecheck` + smoke tests
+- `commit-msg`: `commitlint`
 
-# 3. Variables de entorno
-cp .env.example .env.local
-# Completa .env.local con tus credenciales de Supabase
+## Base de datos
 
-# 4. Iniciar
-npm run dev
-```
-
----
-
-## Estructura del código
-
-Antes de añadir código nuevo, lee [`docs/architecture.md`](docs/architecture.md).
-
-Puntos clave:
-- Los servicios en `src/lib/services/` tienen fallback a mock data — no rompas el modo demo.
-- Usa `useData()` de `src/app/hooks/useData.ts` para cualquier carga async.
-- Las mutaciones van a través de `src/lib/api/endpoints.ts` (Edge Functions).
-- Los tipos de la app van en `src/lib/types/index.ts` (camelCase).
-- Los tipos de la DB van en `src/lib/types/database.ts` (snake_case).
-
----
-
-## Preguntas
-
-Abre un Issue en GitHub con la etiqueta `question`.
+- Cambios SQL en `supabase/schema.sql` y `supabase/rls.sql`.
+- Agregar migraciones en `supabase/migrations/` siguiendo timestamp (`YYYYMMDDHHMMSS_descripcion.sql`).
+- Documentar impacto en `docs/database.md`.

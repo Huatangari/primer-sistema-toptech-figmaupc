@@ -1,56 +1,56 @@
-# Runbook de operaciones — TopTech
+﻿# Runbook de operaciones â€” TopTech
 
 ## Severidades
 
-| Nivel | Descripción | Tiempo de respuesta | Ejemplo |
+| Nivel | DescripciÃ³n | Tiempo de respuesta | Ejemplo |
 |-------|-------------|---------------------|---------|
-| **P1 — Crítico** | Producción caída / datos en riesgo | < 30 min | Login imposible, DB inaccesible |
-| **P2 — Alto** | Funcionalidad principal degradada | < 2 h | Formularios no guardan, carga lenta |
-| **P3 — Medio** | Funcionalidad secundaria afectada | < 24 h | Export falla, campo incorrecto |
-| **P4 — Bajo** | Bug menor / cosmético | Próximo sprint | Typo, alineación incorrecta |
+| **P1 â€” CrÃ­tico** | ProducciÃ³n caÃ­da / datos en riesgo | < 30 min | Login imposible, DB inaccesible |
+| **P2 â€” Alto** | Funcionalidad principal degradada | < 2 h | Formularios no guardan, carga lenta |
+| **P3 â€” Medio** | Funcionalidad secundaria afectada | < 24 h | Export falla, campo incorrecto |
+| **P4 â€” Bajo** | Bug menor / cosmÃ©tico | PrÃ³ximo sprint | Typo, alineaciÃ³n incorrecta |
 
 ---
 
 ## Procedimiento general de incidente
 
-1. **Detectar** — Sentry, monitoreo, reporte de usuario
-2. **Registrar** — Abrir issue en GitHub con template `bug_report.md`
-3. **Clasificar** — Asignar severidad P1–P4
-4. **Comunicar** — Notificar en canal `#incidentes` (P1/P2 inmediato, P3 en el día)
-5. **Investigar** — Ver logs, Sentry, reproducir
-6. **Resolver** — Fix en rama `hotfix/<descripción>` → PR directo a `master` (P1/P2) o flujo normal (P3/P4)
-7. **Verificar** — Tests pasan, comportamiento correcto en staging
-8. **Cerrar** — Actualizar issue, documentar causa raíz en comentario
+1. **Detectar** â€” Sentry, monitoreo, reporte de usuario
+2. **Registrar** â€” Abrir issue en GitHub con template `bug_report.md`
+3. **Clasificar** â€” Asignar severidad P1â€“P4
+4. **Comunicar** â€” Notificar en canal `#incidentes` (P1/P2 inmediato, P3 en el dÃ­a)
+5. **Investigar** â€” Ver logs, Sentry, reproducir
+6. **Resolver** â€” Fix en rama `hotfix/<descripciÃ³n>` â†’ PR directo a `main` (P1/P2) o flujo normal (P3/P4)
+7. **Verificar** â€” Tests pasan, comportamiento correcto en staging
+8. **Cerrar** â€” Actualizar issue, documentar causa raÃ­z en comentario
 
 ---
 
-## P1: Aplicación inaccesible
+## P1: AplicaciÃ³n inaccesible
 
-### Síntomas
-- Pantalla en blanco / error 5xx en la URL de producción
+### SÃ­ntomas
+- Pantalla en blanco / error 5xx en la URL de producciÃ³n
 - Sentry: spike de `Error: ChunkLoadError` o errores de red
 
-### Diagnóstico
+### DiagnÃ³stico
 
 ```bash
 # 1. Verificar estado del deployment en Vercel
 vercel ls --scope <org>
 
-# 2. Ver logs del último deploy
+# 2. Ver logs del Ãºltimo deploy
 vercel logs <deployment-url>
 
 # 3. Verificar estado de Supabase
-# → https://status.supabase.com
+# â†’ https://status.supabase.com
 ```
 
-### Resolución
+### ResoluciÃ³n
 
 ```bash
 # Rollback inmediato al deployment anterior
 vercel promote <previous-deployment-url> --scope <org>
 ```
 
-Si el problema es del código, crear rama `hotfix/`, corregir, PR a `master`.
+Si el problema es del cÃ³digo, crear rama `hotfix/`, corregir, PR a `main`.
 
 ---
 
@@ -58,7 +58,7 @@ Si el problema es del código, crear rama `hotfix/`, corregir, PR a `master`.
 
 ```bash
 # 1. Confirmar estado del proyecto Supabase
-#    Dashboard → Settings → General → Project status
+#    Dashboard â†’ Settings â†’ General â†’ Project status
 
 # 2. Verificar conexiones activas
 SELECT count(*), state FROM pg_stat_activity GROUP BY state;
@@ -68,7 +68,7 @@ SELECT pg_cancel_backend(pid)
 FROM pg_stat_activity
 WHERE state = 'active' AND duration > interval '5 minutes';
 
-# 4. Si los datos están corruptos → ejecutar procedimiento de Restore
+# 4. Si los datos estÃ¡n corruptos â†’ ejecutar procedimiento de Restore
 #    Ver docs/backup-restore.md
 ```
 
@@ -76,34 +76,34 @@ WHERE state = 'active' AND duration > interval '5 minutes';
 
 ## P2: Login falla para todos los usuarios
 
-### Diagnóstico
+### DiagnÃ³stico
 
 ```bash
-# Verificar configuración Auth en Supabase
-# Dashboard → Authentication → Settings
+# Verificar configuraciÃ³n Auth en Supabase
+# Dashboard â†’ Authentication â†’ Settings
 
 # Revisar CORS permitidos
-# Dashboard → API → CORS Origins → agregar dominio si falta
+# Dashboard â†’ API â†’ CORS Origins â†’ agregar dominio si falta
 ```
 
 ### Causas comunes
 
-| Causa | Solución |
+| Causa | SoluciÃ³n |
 |-------|----------|
 | VITE_SUPABASE_ANON_KEY rotada | Actualizar secret en Vercel + redeploy |
-| Dominio no en lista CORS | Agregar en Supabase → API → CORS |
-| JWT secret cambiado | Regenerar en Authentication → Settings |
-| RLS mal configurada | Revisar `supabase/rls.sql`, aplicar corrección |
+| Dominio no en lista CORS | Agregar en Supabase â†’ API â†’ CORS |
+| JWT secret cambiado | Regenerar en Authentication â†’ Settings |
+| RLS mal configurada | Revisar `supabase/rls.sql`, aplicar correcciÃ³n |
 
 ---
 
 ## P2: Edge Function falla
 
 ```bash
-# Ver logs de la función específica
+# Ver logs de la funciÃ³n especÃ­fica
 supabase functions logs create-incident --project-ref <REF>
 
-# Redesplegar la función
+# Redesplegar la funciÃ³n
 supabase functions deploy create-incident --project-ref <REF>
 
 # Redesplegar todas
@@ -115,11 +115,11 @@ supabase functions deploy --project-ref <REF>
 ## P3: Subida de documentos falla
 
 ```bash
-# 1. Verificar políticas del bucket en Storage
-# Dashboard → Storage → Policies → bucket 'documents'
+# 1. Verificar polÃ­ticas del bucket en Storage
+# Dashboard â†’ Storage â†’ Policies â†’ bucket 'documents'
 
-# 2. Verificar límite de tamaño
-# Dashboard → Storage → Settings → File size limit
+# 2. Verificar lÃ­mite de tamaÃ±o
+# Dashboard â†’ Storage â†’ Settings â†’ File size limit
 
 # 3. Revisar logs de upload-document function
 supabase functions logs upload-document --project-ref <REF>
@@ -139,35 +139,35 @@ npm test                  # unit tests
 npm run build             # build production
 ```
 
-Ver error exacto en **GitHub → Actions → run fallido → job → step**.
+Ver error exacto en **GitHub â†’ Actions â†’ run fallido â†’ job â†’ step**.
 
 ---
 
 ## Monitoreo continuo
 
-| Herramienta | Qué monitorear | URL |
+| Herramienta | QuÃ© monitorear | URL |
 |-------------|----------------|-----|
 | **Sentry** | Errores JS en frontend, tasa de error, performance | sentry.io/organizations/toptech |
 | **Supabase Dashboard** | Queries lentas, conexiones, uso de storage | app.supabase.com/project/<ref>/reports |
 | **Vercel Analytics** | Core Web Vitals, LCP, CLS, FID | vercel.com/toptech/analytics |
-| **GitHub Actions** | Estado de CI/CD, duración de workflows | github.com/Huatangari/.../actions |
+| **GitHub Actions** | Estado de CI/CD, duraciÃ³n de workflows | github.com/Huatangari/.../actions |
 
 ### Alertas Sentry recomendadas
 
 ```
-Condición: error_rate > 5 % en 5 min  → Slack #incidentes
-Condición: new_issue (P1)              → PagerDuty / email
-Condición: p95_latency > 3 s           → Slack #performance
+CondiciÃ³n: error_rate > 5 % en 5 min  â†’ Slack #incidentes
+CondiciÃ³n: new_issue (P1)              â†’ PagerDuty / email
+CondiciÃ³n: p95_latency > 3 s           â†’ Slack #performance
 ```
 
 ---
 
-## Rotación de secrets
+## RotaciÃ³n de secrets
 
 Cuando se rota `VITE_SUPABASE_ANON_KEY` o `VITE_SENTRY_DSN`:
 
-1. Actualizar en Vercel: `Settings → Environment Variables`
-2. Actualizar en GitHub: `Settings → Secrets → Actions`
+1. Actualizar en Vercel: `Settings â†’ Environment Variables`
+2. Actualizar en GitHub: `Settings â†’ Secrets â†’ Actions`
 3. Forzar redeploy: `vercel deploy --force --prod`
 4. Verificar que el login funciona en staging antes de aplicar en prod
 
@@ -177,7 +177,9 @@ Cuando se rota `VITE_SUPABASE_ANON_KEY` o `VITE_SENTRY_DSN`:
 
 | Rol | Nombre | Contacto |
 |-----|--------|----------|
-| Tech Lead | — | — |
-| DevOps | — | — |
-| Supabase owner | — | — |
-| Cliente | — | — |
+| Tech Lead | â€” | â€” |
+| DevOps | â€” | â€” |
+| Supabase owner | â€” | â€” |
+| Cliente | â€” | â€” |
+
+
