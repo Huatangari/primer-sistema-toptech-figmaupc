@@ -95,7 +95,7 @@ export const mockAssets: Asset[] = [
     lastMaintenance: "2024-11-15",
     nextMaintenance: "2025-02-15",
     description: "Sistema de 6 cámaras para cobertura total del parking.",
-    observations: "FALLA: 2 cámaras sin señal desde 05/03. Técnico asignado. Estimado reparación: 48hs.",
+    observations: "FALLA: 2 cámaras sin señal desde 05/03. Técnico asignado. Estimado reparación: 48 h.",
     providerId: "prov-003",
     serialNumber: "HK-NVR-4CH-2025",
     brand: "Hikvision",

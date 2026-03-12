@@ -1,34 +1,80 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { Building2, Eye, EyeOff, Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
-import { login } from "../../lib/auth/authClient";
-import { IS_SUPABASE_CONFIGURED } from "../../lib/auth/authClient";
+import { Building2, Eye, EyeOff, Lock, Mail, ArrowRight, AlertCircle, Github } from "lucide-react";
+import { login, supabase, IS_SUPABASE_CONFIGURED } from "../../lib/auth/authClient";
 
 export function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("admin@torresdelparque.com");
   const [password, setPassword] = useState("demo1234");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loadingProvider, setLoadingProvider] = useState<"password" | "github" | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const authUnavailable = !IS_SUPABASE_CONFIGURED;
+  const isPasswordLoading = loadingProvider === "password";
+  const isGitHubLoading = loadingProvider === "github";
+
+  useEffect(() => {
+    if (!IS_SUPABASE_CONFIGURED) return;
+
+    let active = true;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return;
+      if (session) navigate("/", { replace: true });
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return;
+      if (session) navigate("/", { replace: true });
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setLoadingProvider("password");
     setError(null);
 
-    // Modo demo sin Supabase configurado
-    if (!IS_SUPABASE_CONFIGURED) {
-      setTimeout(() => navigate("/"), 900);
+    if (authUnavailable) {
+      setError("Supabase no esta configurado. Completa VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.");
+      setLoadingProvider(null);
       return;
     }
 
     try {
       await login(email, password);
-      navigate("/");
+      window.location.href = "/";
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al iniciar sesión");
-      setLoading(false);
+      setError(err instanceof Error ? err.message : "Error al iniciar sesion");
+      setLoadingProvider(null);
+    }
+  };
+
+  const handleGitHubLogin = async () => {
+    setError(null);
+    setLoadingProvider("github");
+
+    if (authUnavailable) {
+      setError("Supabase no esta configurado. Completa VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY.");
+      setLoadingProvider(null);
+      return;
+    }
+
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+    });
+
+    if (oauthError) {
+      setError(oauthError.message);
+      setLoadingProvider(null);
     }
   };
 
@@ -49,15 +95,17 @@ export function Login() {
             </div>
             <div>
               <p className="text-white font-bold text-lg">BuildTrack</p>
-              <p className="text-blue-300 text-xs">Gestión Técnica de Edificios</p>
+              <p className="text-blue-300 text-xs">Gestion Tecnica de Edificios</p>
             </div>
           </div>
 
           <h2 className="text-white mb-4 text-[32px] font-bold leading-tight">
-            Control total<br />de tu edificio
+            Control total
+            <br />
+            de tu edificio
           </h2>
           <p className="text-slate-400 text-[15px] leading-[1.7]">
-            Centraliza activos, incidencias, documentos y proveedores en una sola plataforma diseñada para la gestión técnica profesional.
+            Centraliza activos, incidencias, documentos y proveedores en una sola plataforma disenada para la gestion tecnica profesional.
           </p>
         </div>
 
@@ -65,7 +113,7 @@ export function Login() {
         <div className="relative space-y-3">
           {[
             "Registro y trazabilidad de activos",
-            "Gestión de incidencias en tiempo real",
+            "Gestion de incidencias en tiempo real",
             "Repositorio documental centralizado",
             "Dashboard ejecutivo con KPIs",
           ].map((feat) => (
@@ -78,7 +126,7 @@ export function Login() {
           ))}
         </div>
 
-        <p className="relative text-slate-600 text-xs">© 2025 BuildTrack · Versión Demo</p>
+        <p className="relative text-slate-600 text-xs">(c) 2026 BuildTrack - Version Demo</p>
       </div>
 
       {/* Right panel - form */}
@@ -93,13 +141,11 @@ export function Login() {
           </div>
 
           <div className="mb-8">
-            <h1 className="text-white mb-1 text-[26px] font-bold">
-              Iniciar sesión
-            </h1>
-            <p className="text-slate-400 text-sm">Accede a tu panel de gestión técnica</p>
+            <h1 className="text-white mb-1 text-[26px] font-bold">Iniciar sesion</h1>
+            <p className="text-slate-400 text-sm">Accede a tu panel de gestion tecnica</p>
           </div>
 
-          {/* Demo badge o error */}
+          {/* Error / info */}
           {error ? (
             <div className="mb-6 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2">
               <AlertCircle size={14} className="text-red-400 flex-shrink-0" />
@@ -108,7 +154,7 @@ export function Login() {
           ) : (
             <div className="mb-6 px-3 py-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
               <p className="text-blue-400 text-xs font-medium">
-                {IS_SUPABASE_CONFIGURED ? "🔒 Ingresa con tus credenciales" : "🔒 Modo demo — credenciales pre-cargadas"}
+                {authUnavailable ? "Configuracion requerida para autenticar" : "Ingresa con tus credenciales"}
               </p>
             </div>
           )}
@@ -117,7 +163,7 @@ export function Login() {
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-slate-300 text-sm font-medium mb-1.5">
-                Correo electrónico
+                Correo electronico
               </label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -135,7 +181,7 @@ export function Login() {
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-slate-300 text-sm font-medium mb-1.5">
-                Contraseña
+                Contrasena
               </label>
               <div className="relative">
                 <Lock size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -145,7 +191,7 @@ export function Login() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full bg-slate-800/80 border border-slate-700 text-white rounded-lg pl-10 pr-10 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all"
-                  placeholder="••••••••"
+                  placeholder="********"
                 />
                 <button
                   type="button"
@@ -160,10 +206,10 @@ export function Login() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loadingProvider !== null || authUnavailable}
               className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-70 text-white rounded-lg py-2.5 text-sm font-semibold flex items-center justify-center gap-2 transition-all mt-2"
             >
-              {loading ? (
+              {isPasswordLoading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Ingresando...
@@ -175,11 +221,40 @@ export function Login() {
                 </>
               )}
             </button>
+
+            <div className="relative py-1">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-700" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-slate-950 px-2 text-slate-500">o</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleGitHubLogin}
+              disabled={loadingProvider !== null || authUnavailable}
+              className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 disabled:opacity-70 text-white rounded-lg py-2.5 text-sm font-semibold flex items-center justify-center gap-2 transition-all"
+            >
+              {isGitHubLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Redirigiendo...
+                </>
+              ) : (
+                <>
+                  <Github size={16} />
+                  Continuar con GitHub
+                </>
+              )}
+            </button>
           </form>
 
           <p className="text-slate-600 text-xs text-center mt-8">
-            Esta es una demo para presentación comercial.
-            <br />No almacena datos reales.
+            Esta es una demo para presentacion comercial.
+            <br />
+            No almacena datos reales.
           </p>
         </div>
       </div>

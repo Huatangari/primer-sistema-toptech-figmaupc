@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import type { User, Session } from "@supabase/supabase-js";
-import { supabase } from "./authClient";
+import { IS_SUPABASE_CONFIGURED, supabase } from "./authClient";
+import { identifyUser, clearUser } from "../monitoring/sentry";
+import { clearActiveBuildingIdCache } from "../services/building";
 
 export interface AuthState {
   user: User | null;
@@ -9,7 +11,7 @@ export interface AuthState {
 }
 
 /**
- * Hook interno — escucha cambios de sesión de Supabase en tiempo real.
+ * Hook interno: escucha cambios de sesion de Supabase en tiempo real.
  * Usado por AuthProvider; en componentes preferir useAuthContext().
  */
 export function useAuth(): AuthState {
@@ -18,21 +20,47 @@ export function useAuth(): AuthState {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Carga inicial desde localStorage (sincrónica vía getSession)
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    if (!IS_SUPABASE_CONFIGURED) {
+      clearActiveBuildingIdCache();
+      clearUser();
       setLoading(false);
-    });
+      return;
+    }
 
-    // Escucha cambios: login, logout, token refresh, etc.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+    // Carga inicial desde localStorage (sincronica via getSession)
+    supabase.auth
+      .getSession()
+      .then(({ data: { session } }) => {
         setSession(session);
         setUser(session?.user ?? null);
+        if (!session?.user) {
+          clearActiveBuildingIdCache();
+          clearUser();
+        }
         setLoading(false);
+      })
+      .catch(() => {
+        setSession(null);
+        setUser(null);
+        clearActiveBuildingIdCache();
+        clearUser();
+        setLoading(false);
+      });
+
+    // Escucha cambios: login, logout, token refresh, etc.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      setLoading(false);
+      clearActiveBuildingIdCache();
+      if (nextSession?.user) {
+        identifyUser(nextSession.user.id, nextSession.user.email);
+      } else {
+        clearUser();
       }
-    );
+    });
 
     return () => subscription.unsubscribe();
   }, []);

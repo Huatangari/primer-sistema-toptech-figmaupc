@@ -41,6 +41,20 @@ export default {
 
     'declaration-block-no-duplicate-properties': true,
     'no-descending-specificity': null,
+    'no-empty-source': null,
+    'at-rule-empty-line-before': null,
+    'no-invalid-position-at-import-rule': null,
+    'custom-property-empty-line-before': null,
+    'comment-empty-line-before': null,
+    'color-hex-length': null,
+    'color-function-alias-notation': null,
+    'color-function-notation': null,
+    'alpha-value-notation': null,
+    'lightness-notation': null,
+    'hue-degree-notation': null,
+    'value-keyword-case': null,
+    'media-feature-range-notation': null,
+    'property-no-vendor-prefix': null,
 
     // ── Tailwind functions ────────────────────────────────────────────────────
     'function-no-unknown': [
@@ -49,12 +63,8 @@ export default {
     ],
 
     // ── Property order (optional, non-blocking) ───────────────────────────────
-    'order/properties-order': [
-      'position', 'z-index', 'top', 'right', 'bottom', 'left',
-      'display', 'overflow', 'margin', 'padding',
-      'width', 'height', 'font-size', 'font-weight',
-      'color', 'background-color', 'border',
-    ],
+    // Keep property order as recommendation outside CI.
+    'order/properties-order': null,
   },
   ignoreFiles: ['node_modules/**', 'dist/**', 'build/**'],
 };

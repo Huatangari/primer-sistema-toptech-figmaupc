@@ -54,6 +54,9 @@ Desktop.ini
 # Supabase CLI
 .supabase/
 
+# Vercel local metadata
+.vercel/
+
 # Temporary
 *.tmp
 *.temp
@@ -64,3 +67,5 @@ test-results/
 playwright-report/
 cypress/videos/
 cypress/screenshots/
+
+.vercel

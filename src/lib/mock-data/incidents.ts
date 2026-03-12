@@ -184,7 +184,7 @@ export const mockIncidentEvents: IncidentEvent[] = [
     incidentId: "inc-002",
     date: "2025-03-08T09:00:00Z",
     type: "Actualización",
-    description: "Material de reposición solicitado. Reparación estimada en 48hs.",
+    description: "Material de reposición solicitado. Reparación estimada en 48 h.",
     author: "Tec. Pablo Moreno",
   },
   {

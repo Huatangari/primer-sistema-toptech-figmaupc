@@ -8,8 +8,11 @@
  */
 
 import { supabase, IS_SUPABASE_CONFIGURED } from "../auth/authClient";
+import { mockIncidents, mockIncidentEvents } from "../mock-data/incidents";
 import type { Incident, Document } from "../types";
 import type { IncidentPriority } from "../types";
+import { mapDocument, mapIncident } from "./mappers";
+import type { DocumentRow, IncidentRow } from "../types/database";
 
 // ─── Input types ─────────────────────────────────────────────────────────────
 
@@ -72,7 +75,7 @@ export async function createIncident(input: CreateIncidentInput): Promise<Incide
   });
 
   if (error) throw new Error(error.message);
-  return data.data as Incident;
+  return mapIncident(data.data as IncidentRow);
 }
 
 /**
@@ -82,7 +85,24 @@ export async function createIncident(input: CreateIncidentInput): Promise<Incide
 export async function closeIncident(input: CloseIncidentInput): Promise<Incident> {
   if (!IS_SUPABASE_CONFIGURED) {
     notConfigured("closeIncident");
-    throw new Error("Conecta Supabase para cerrar incidencias reales");
+    const incident = mockIncidents.find((item) => item.id === input.incident_id);
+    if (!incident) throw new Error("Incidencia no encontrada");
+
+    const now = new Date().toISOString();
+    incident.status = "Resuelta";
+    incident.updatedAt = now;
+    incident.resolvedAt = now;
+
+    mockIncidentEvents.push({
+      id: `iev-${Date.now()}`,
+      incidentId: incident.id,
+      date: now,
+      type: "Resolución",
+      description: input.resolution_notes || "Incidencia marcada como resuelta",
+      author: "Sistema demo",
+    });
+
+    return incident;
   }
 
   const { data, error } = await supabase.functions.invoke("close-incident", {
@@ -90,7 +110,7 @@ export async function closeIncident(input: CloseIncidentInput): Promise<Incident
   });
 
   if (error) throw new Error(error.message);
-  return data.data as Incident;
+  return mapIncident(data.data as IncidentRow);
 }
 
 /**
@@ -109,7 +129,7 @@ export async function uploadDocument(input: UploadDocumentInput): Promise<Docume
   });
 
   if (error) throw new Error(error.message);
-  return data.data as Document;
+  return mapDocument(data.data as DocumentRow);
 }
 
 /**

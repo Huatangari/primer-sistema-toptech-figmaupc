@@ -19,7 +19,7 @@
 -- 1. EXTENSIONS
 -- -----------------------------------------------------------------------------
 
-create extension if not exists "uuid-ossp";
+create extension if not exists pgcrypto;
 
 
 -- -----------------------------------------------------------------------------
@@ -104,8 +104,8 @@ create table buildings (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   address     text,
-  floors      integer,
-  units       integer,
+  floors      integer check (floors is null or floors >= 0),
+  units       integer check (units is null or units >= 0),
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
@@ -147,7 +147,7 @@ create table providers (
   name            text not null,
   rubro           text not null,
   contact_name    text not null,
-  contact_email   text not null,
+  contact_email   text not null check (position('@' in contact_email) > 1),
   contact_phone   text not null,
   status          provider_status not null default 'Activo',
   last_service    date,
@@ -203,7 +203,23 @@ create table assets (
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now(),
 
-  unique (building_id, code)
+  unique (building_id, code),
+  unique (id, building_id),
+  check (
+    next_maintenance is null
+    or installation_date is null
+    or next_maintenance >= installation_date
+  ),
+  check (
+    last_maintenance is null
+    or installation_date is null
+    or last_maintenance >= installation_date
+  ),
+  check (
+    next_maintenance is null
+    or last_maintenance is null
+    or next_maintenance >= last_maintenance
+  )
 );
 
 comment on table assets is
@@ -216,7 +232,7 @@ comment on table assets is
 
 create table asset_history (
   id           uuid primary key default gen_random_uuid(),
-  asset_id     uuid not null references assets(id) on delete cascade,
+  asset_id     uuid not null,
   building_id  uuid not null references buildings(id) on delete cascade,
 
   date         timestamptz not null default now(),
@@ -225,7 +241,11 @@ create table asset_history (
   description  text not null default '',
   technician   text not null,
 
-  created_at   timestamptz not null default now()
+  created_at   timestamptz not null default now(),
+
+  foreign key (asset_id, building_id)
+    references assets(id, building_id)
+    on delete cascade
 );
 
 comment on table asset_history is
@@ -256,7 +276,12 @@ create table incidents (
   updated_at   timestamptz not null default now(),
   resolved_at  timestamptz,                       -- optional
 
-  unique (building_id, code)
+  unique (building_id, code),
+  unique (id, building_id),
+  check (
+    resolved_at is null
+    or status in ('Resuelta', 'Cerrada')
+  )
 );
 
 comment on table incidents is
@@ -269,7 +294,7 @@ comment on table incidents is
 
 create table incident_events (
   id           uuid primary key default gen_random_uuid(),
-  incident_id  uuid not null references incidents(id) on delete cascade,
+  incident_id  uuid not null,
   building_id  uuid not null references buildings(id) on delete cascade,
 
   date         timestamptz not null default now(),
@@ -277,7 +302,11 @@ create table incident_events (
   description  text not null default '',
   author       text not null,
 
-  created_at   timestamptz not null default now()
+  created_at   timestamptz not null default now(),
+
+  foreign key (incident_id, building_id)
+    references incidents(id, building_id)
+    on delete cascade
 );
 
 comment on table incident_events is
@@ -400,6 +429,7 @@ create trigger trg_documents_updated_at
 -- -----------------------------------------------------------------------------
 
 alter table buildings           enable row level security;
+alter table building_users      enable row level security;
 alter table providers           enable row level security;
 alter table provider_categories enable row level security;
 alter table assets              enable row level security;
@@ -408,20 +438,349 @@ alter table incidents           enable row level security;
 alter table incident_events     enable row level security;
 alter table documents           enable row level security;
 
--- Política temporal de desarrollo: acceso total (SELECT + INSERT + UPDATE + DELETE).
--- USING     → aplica a SELECT, UPDATE, DELETE
--- WITH CHECK → aplica a INSERT, UPDATE  (sin esto los INSERT fallan con 403)
--- REEMPLAZAR antes de producción con políticas por building_id.
+alter table buildings           force row level security;
+alter table building_users      force row level security;
+alter table providers           force row level security;
+alter table provider_categories force row level security;
+alter table assets              force row level security;
+alter table asset_history       force row level security;
+alter table incidents           force row level security;
+alter table incident_events     force row level security;
+alter table documents           force row level security;
 
-create policy "dev_all_buildings"           on buildings           for all using (true) with check (true);
-create policy "dev_all_providers"           on providers           for all using (true) with check (true);
-create policy "dev_all_provider_categories" on provider_categories for all using (true) with check (true);
-create policy "dev_all_assets"              on assets              for all using (true) with check (true);
-create policy "dev_all_asset_history"       on asset_history       for all using (true) with check (true);
-create policy "dev_all_incidents"           on incidents           for all using (true) with check (true);
-create policy "dev_all_incident_events"     on incident_events     for all using (true) with check (true);
-create policy "dev_all_documents"           on documents           for all using (true) with check (true);
+-- Helpers multi-tenant para validar membresia y roles por edificio.
+-- SECURITY DEFINER evita recursion cuando la policy consulta building_users.
+create or replace function is_building_member(target_building uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from building_users bu
+    where bu.building_id = target_building
+      and bu.user_id = auth.uid()
+  );
+$$;
 
+create or replace function has_building_role(target_building uuid, allowed_roles user_role[])
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from building_users bu
+    where bu.building_id = target_building
+      and bu.user_id = auth.uid()
+      and bu.role = any(allowed_roles)
+  );
+$$;
+
+revoke all on function is_building_member(uuid) from public;
+revoke all on function has_building_role(uuid, user_role[]) from public;
+grant execute on function is_building_member(uuid) to authenticated;
+grant execute on function has_building_role(uuid, user_role[]) to authenticated;
+
+-- Limpieza de politicas abiertas anteriores (dev_all_*)
+drop policy if exists "dev_all_buildings" on buildings;
+drop policy if exists "dev_all_providers" on providers;
+drop policy if exists "dev_all_provider_categories" on provider_categories;
+drop policy if exists "dev_all_assets" on assets;
+drop policy if exists "dev_all_asset_history" on asset_history;
+drop policy if exists "dev_all_incidents" on incidents;
+drop policy if exists "dev_all_incident_events" on incident_events;
+drop policy if exists "dev_all_documents" on documents;
+
+-- building_users: cada usuario solo puede ver su propia membresia.
+drop policy if exists "building_users_select_own" on building_users;
+create policy "building_users_select_own"
+  on building_users
+  for select
+  using (user_id = auth.uid());
+
+-- buildings
+drop policy if exists "buildings_select_member" on buildings;
+drop policy if exists "buildings_update_admin" on buildings;
+create policy "buildings_select_member"
+  on buildings
+  for select
+  using (is_building_member(id));
+create policy "buildings_update_admin"
+  on buildings
+  for update
+  using (has_building_role(id, array['admin']::user_role[]))
+  with check (has_building_role(id, array['admin']::user_role[]));
+
+-- providers
+drop policy if exists "providers_select_member" on providers;
+drop policy if exists "providers_insert_writer" on providers;
+drop policy if exists "providers_update_writer" on providers;
+drop policy if exists "providers_delete_admin" on providers;
+create policy "providers_select_member"
+  on providers
+  for select
+  using (is_building_member(building_id));
+create policy "providers_insert_writer"
+  on providers
+  for insert
+  with check (has_building_role(building_id, array['admin','technician']::user_role[]));
+create policy "providers_update_writer"
+  on providers
+  for update
+  using (has_building_role(building_id, array['admin','technician']::user_role[]))
+  with check (has_building_role(building_id, array['admin','technician']::user_role[]));
+create policy "providers_delete_admin"
+  on providers
+  for delete
+  using (has_building_role(building_id, array['admin']::user_role[]));
+
+-- provider_categories (via providers.building_id)
+drop policy if exists "provider_categories_select_member" on provider_categories;
+drop policy if exists "provider_categories_insert_writer" on provider_categories;
+drop policy if exists "provider_categories_update_writer" on provider_categories;
+drop policy if exists "provider_categories_delete_admin" on provider_categories;
+create policy "provider_categories_select_member"
+  on provider_categories
+  for select
+  using (
+    exists (
+      select 1
+      from providers p
+      where p.id = provider_id
+        and is_building_member(p.building_id)
+    )
+  );
+create policy "provider_categories_insert_writer"
+  on provider_categories
+  for insert
+  with check (
+    exists (
+      select 1
+      from providers p
+      where p.id = provider_id
+        and has_building_role(p.building_id, array['admin','technician']::user_role[])
+    )
+  );
+create policy "provider_categories_update_writer"
+  on provider_categories
+  for update
+  using (
+    exists (
+      select 1
+      from providers p
+      where p.id = provider_id
+        and has_building_role(p.building_id, array['admin','technician']::user_role[])
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from providers p
+      where p.id = provider_id
+        and has_building_role(p.building_id, array['admin','technician']::user_role[])
+    )
+  );
+create policy "provider_categories_delete_admin"
+  on provider_categories
+  for delete
+  using (
+    exists (
+      select 1
+      from providers p
+      where p.id = provider_id
+        and has_building_role(p.building_id, array['admin']::user_role[])
+    )
+  );
+
+-- assets
+drop policy if exists "assets_select_member" on assets;
+drop policy if exists "assets_insert_writer" on assets;
+drop policy if exists "assets_update_writer" on assets;
+drop policy if exists "assets_delete_admin" on assets;
+create policy "assets_select_member"
+  on assets
+  for select
+  using (is_building_member(building_id));
+create policy "assets_insert_writer"
+  on assets
+  for insert
+  with check (has_building_role(building_id, array['admin','technician']::user_role[]));
+create policy "assets_update_writer"
+  on assets
+  for update
+  using (has_building_role(building_id, array['admin','technician']::user_role[]))
+  with check (has_building_role(building_id, array['admin','technician']::user_role[]));
+create policy "assets_delete_admin"
+  on assets
+  for delete
+  using (has_building_role(building_id, array['admin']::user_role[]));
+
+-- asset_history (via assets.building_id)
+drop policy if exists "asset_history_select_member" on asset_history;
+drop policy if exists "asset_history_insert_writer" on asset_history;
+drop policy if exists "asset_history_update_writer" on asset_history;
+drop policy if exists "asset_history_delete_admin" on asset_history;
+create policy "asset_history_select_member"
+  on asset_history
+  for select
+  using (
+    exists (
+      select 1
+      from assets a
+      where a.id = asset_id
+        and is_building_member(a.building_id)
+    )
+  );
+create policy "asset_history_insert_writer"
+  on asset_history
+  for insert
+  with check (
+    exists (
+      select 1
+      from assets a
+      where a.id = asset_id
+        and has_building_role(a.building_id, array['admin','technician']::user_role[])
+    )
+  );
+create policy "asset_history_update_writer"
+  on asset_history
+  for update
+  using (
+    exists (
+      select 1
+      from assets a
+      where a.id = asset_id
+        and has_building_role(a.building_id, array['admin','technician']::user_role[])
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from assets a
+      where a.id = asset_id
+        and has_building_role(a.building_id, array['admin','technician']::user_role[])
+    )
+  );
+create policy "asset_history_delete_admin"
+  on asset_history
+  for delete
+  using (
+    exists (
+      select 1
+      from assets a
+      where a.id = asset_id
+        and has_building_role(a.building_id, array['admin']::user_role[])
+    )
+  );
+
+-- incidents
+drop policy if exists "incidents_select_member" on incidents;
+drop policy if exists "incidents_insert_writer" on incidents;
+drop policy if exists "incidents_update_writer" on incidents;
+drop policy if exists "incidents_delete_admin" on incidents;
+create policy "incidents_select_member"
+  on incidents
+  for select
+  using (is_building_member(building_id));
+create policy "incidents_insert_writer"
+  on incidents
+  for insert
+  with check (has_building_role(building_id, array['admin','technician']::user_role[]));
+create policy "incidents_update_writer"
+  on incidents
+  for update
+  using (has_building_role(building_id, array['admin','technician']::user_role[]))
+  with check (has_building_role(building_id, array['admin','technician']::user_role[]));
+create policy "incidents_delete_admin"
+  on incidents
+  for delete
+  using (has_building_role(building_id, array['admin']::user_role[]));
+
+-- incident_events (via incidents.building_id)
+drop policy if exists "incident_events_select_member" on incident_events;
+drop policy if exists "incident_events_insert_writer" on incident_events;
+drop policy if exists "incident_events_update_writer" on incident_events;
+drop policy if exists "incident_events_delete_admin" on incident_events;
+create policy "incident_events_select_member"
+  on incident_events
+  for select
+  using (
+    exists (
+      select 1
+      from incidents i
+      where i.id = incident_id
+        and is_building_member(i.building_id)
+    )
+  );
+create policy "incident_events_insert_writer"
+  on incident_events
+  for insert
+  with check (
+    exists (
+      select 1
+      from incidents i
+      where i.id = incident_id
+        and has_building_role(i.building_id, array['admin','technician']::user_role[])
+    )
+  );
+create policy "incident_events_update_writer"
+  on incident_events
+  for update
+  using (
+    exists (
+      select 1
+      from incidents i
+      where i.id = incident_id
+        and has_building_role(i.building_id, array['admin','technician']::user_role[])
+    )
+  )
+  with check (
+    exists (
+      select 1
+      from incidents i
+      where i.id = incident_id
+        and has_building_role(i.building_id, array['admin','technician']::user_role[])
+    )
+  );
+create policy "incident_events_delete_admin"
+  on incident_events
+  for delete
+  using (
+    exists (
+      select 1
+      from incidents i
+      where i.id = incident_id
+        and has_building_role(i.building_id, array['admin']::user_role[])
+    )
+  );
+
+-- documents
+drop policy if exists "documents_select_member" on documents;
+drop policy if exists "documents_insert_writer" on documents;
+drop policy if exists "documents_update_writer" on documents;
+drop policy if exists "documents_delete_admin" on documents;
+create policy "documents_select_member"
+  on documents
+  for select
+  using (is_building_member(building_id));
+create policy "documents_insert_writer"
+  on documents
+  for insert
+  with check (has_building_role(building_id, array['admin','technician']::user_role[]));
+create policy "documents_update_writer"
+  on documents
+  for update
+  using (has_building_role(building_id, array['admin','technician']::user_role[]))
+  with check (has_building_role(building_id, array['admin','technician']::user_role[]));
+create policy "documents_delete_admin"
+  on documents
+  for delete
+  using (has_building_role(building_id, array['admin']::user_role[]));
 
 -- =============================================================================
 -- CONEXIÓN CON EL FRONTEND
@@ -468,3 +827,5 @@ create policy "dev_all_documents"           on documents           for all using
 --   Provider.contractType  → providers.contract_type
 --   Provider.categories    → provider_categories (tabla junction)
 -- =============================================================================
+
+

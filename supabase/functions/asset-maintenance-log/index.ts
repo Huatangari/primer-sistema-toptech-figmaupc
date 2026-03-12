@@ -1,7 +1,7 @@
-/**
+﻿/**
  * Edge Function: asset-maintenance-log
  * Registra un evento de mantenimiento en el historial de un activo
- * y actualiza la fecha de último mantenimiento.
+ * y actualiza la fecha de ultimo mantenimiento.
  *
  * POST /functions/v1/asset-maintenance-log
  * Body: { asset_id, type, title, description, technician, next_maintenance? }
@@ -12,14 +12,17 @@ import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { requireAuth, createServiceClient } from "../_shared/auth.ts";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return handleCors();
+  if (req.method === "OPTIONS") return handleCors(req);
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Metodo no permitido" }, 405, req);
+  }
 
   try {
     const { client } = await requireAuth(req);
     const { asset_id, type, title, description, technician, next_maintenance } = await req.json();
 
     if (!asset_id || !type || !title || !technician) {
-      return jsonResponse({ error: "asset_id, type, title y technician son requeridos" }, 400);
+      return jsonResponse({ error: "asset_id, type, title y technician son requeridos" }, 400, req);
     }
 
     // Obtener el activo con acceso RLS
@@ -30,7 +33,7 @@ serve(async (req) => {
       .single();
 
     if (assetErr || !asset) {
-      return jsonResponse({ error: "Activo no encontrado o sin acceso" }, 404);
+      return jsonResponse({ error: "Activo no encontrado o sin acceso" }, 404, req);
     }
 
     const serviceClient = createServiceClient();
@@ -51,7 +54,7 @@ serve(async (req) => {
       .select()
       .single();
 
-    if (histErr) return jsonResponse({ error: histErr.message }, 500);
+    if (histErr) return jsonResponse({ error: histErr.message }, 500, req);
 
     // Actualizar last_maintenance (y next_maintenance si se provee)
     const assetUpdate: Record<string, string> = {
@@ -60,15 +63,11 @@ serve(async (req) => {
     };
     if (next_maintenance) assetUpdate.next_maintenance = next_maintenance;
 
-    await serviceClient
-      .from("assets")
-      .update(assetUpdate)
-      .eq("id", asset_id);
+    await serviceClient.from("assets").update(assetUpdate).eq("id", asset_id);
 
-    return jsonResponse({ data: historyEntry }, 201);
-
+    return jsonResponse({ data: historyEntry }, 201, req);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error interno";
-    return jsonResponse({ error: message }, message === "No autorizado" ? 401 : 500);
+    return jsonResponse({ error: message }, message === "No autorizado" ? 401 : 500, req);
   }
 });

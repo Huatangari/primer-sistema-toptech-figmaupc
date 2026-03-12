@@ -1,6 +1,6 @@
 /**
  * Edge Function: create-incident
- * Crea una incidencia y registra el evento inicial de auditoría.
+ * Crea una incidencia y registra el evento inicial de auditoria.
  *
  * POST /functions/v1/create-incident
  * Body: { asset_id, title, description, priority, observations? }
@@ -11,7 +11,10 @@ import { handleCors, jsonResponse } from "../_shared/cors.ts";
 import { requireAuth, createServiceClient } from "../_shared/auth.ts";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") return handleCors();
+  if (req.method === "OPTIONS") return handleCors(req);
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Metodo no permitido" }, 405, req);
+  }
 
   try {
     // 1. Autenticar usuario
@@ -22,10 +25,10 @@ serve(async (req) => {
     const { asset_id, title, description, priority, observations } = body;
 
     if (!asset_id || !title || !priority) {
-      return jsonResponse({ error: "asset_id, title y priority son requeridos" }, 400);
+      return jsonResponse({ error: "asset_id, title y priority son requeridos" }, 400, req);
     }
 
-    // 3. Obtener building_id del activo (via RLS — el usuario debe tener acceso)
+    // 3. Obtener building_id del activo (via RLS - el usuario debe tener acceso)
     const { data: asset, error: assetErr } = await client
       .from("assets")
       .select("id, building_id")
@@ -33,10 +36,10 @@ serve(async (req) => {
       .single();
 
     if (assetErr || !asset) {
-      return jsonResponse({ error: "Activo no encontrado o sin acceso" }, 404);
+      return jsonResponse({ error: "Activo no encontrado o sin acceso" }, 404, req);
     }
 
-    // 4. Generar código único INC-XXX
+    // 4. Generar codigo unico INC-XXX
     const serviceClient = createServiceClient();
     const { count } = await serviceClient
       .from("incidents")
@@ -63,9 +66,9 @@ serve(async (req) => {
       .select()
       .single();
 
-    if (incErr) return jsonResponse({ error: incErr.message }, 500);
+    if (incErr) return jsonResponse({ error: incErr.message }, 500, req);
 
-    // 6. Registrar evento de auditoría
+    // 6. Registrar evento de auditoria
     await serviceClient.from("incident_events").insert({
       incident_id: incident.id,
       building_id: asset.building_id,
@@ -74,10 +77,9 @@ serve(async (req) => {
       author: user.email ?? user.id,
     });
 
-    return jsonResponse({ data: incident }, 201);
-
+    return jsonResponse({ data: incident }, 201, req);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Error interno";
-    return jsonResponse({ error: message }, message === "No autorizado" ? 401 : 500);
+    return jsonResponse({ error: message }, message === "No autorizado" ? 401 : 500, req);
   }
 });

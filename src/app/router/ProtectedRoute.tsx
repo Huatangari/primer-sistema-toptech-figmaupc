@@ -4,14 +4,13 @@ import { IS_SUPABASE_CONFIGURED } from "../../lib/auth/authClient";
 
 /**
  * Protege rutas privadas.
- * - Si Supabase no está configurado: modo demo, acceso libre.
- * - Si está configurado: redirige a /login si no hay sesión activa.
+ * - Supabase configurado: requiere sesion activa.
+ * - Sin Supabase: bloquea acceso y redirige a /login.
  */
 export function ProtectedRoute() {
-  const { user, loading } = useAuthContext();
+  const { session, loading } = useAuthContext();
 
-  // Modo demo sin Supabase — pasa directo
-  if (!IS_SUPABASE_CONFIGURED) return <Outlet />;
+  if (!IS_SUPABASE_CONFIGURED) return <Navigate to="/login" replace />;
 
   if (loading) {
     return (
@@ -21,7 +20,7 @@ export function ProtectedRoute() {
     );
   }
 
-  if (!user) return <Navigate to="/login" replace />;
+  if (!session) return <Navigate to="/login" replace />;
 
   return <Outlet />;
 }

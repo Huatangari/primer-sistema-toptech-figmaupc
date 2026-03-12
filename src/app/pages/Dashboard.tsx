@@ -20,7 +20,7 @@ import { ErrorState } from "../components/shared/ErrorState";
 import { useData } from "../hooks/useData";
 import { getAssets } from "../../lib/services/assets";
 import { getIncidents } from "../../lib/services/incidents";
-import { getCategoryColor, formatDate, timeAgo } from "../../lib/utils";
+import { getCategoryColor, formatDate, isIncidentClosed, timeAgo } from "../../lib/utils";
 import { Asset, AssetCategory, Incident } from "../../lib/types";
 import styles from "./Dashboard.module.css";
 
@@ -47,10 +47,17 @@ export function Dashboard() {
   // KPI calculations
   const totalAssets = assets.length;
   const openIncidents = incidents.filter((i) => i.status === "Abierta" || i.status === "En Proceso").length;
-  const closedIncidents = incidents.filter((i) => i.status === "Resuelta" || i.status === "Cerrada").length;
-  const criticalIncidents = incidents.filter((i) => i.priority === "Crítica" && i.status !== "Cerrada").length;
+  const closedIncidents = incidents.filter((i) => isIncidentClosed(i.status)).length;
+  const criticalIncidents = incidents.filter((i) => i.priority === "Crítica" && !isIncidentClosed(i.status)).length;
   const assetsWithIssues = assets.filter((a) => a.status === "Falla" || a.status === "Vencido").length;
   const healthScore = totalAssets > 0 ? Math.round(((totalAssets - assetsWithIssues) / totalAssets) * 100) : 0;
+  const todayLabel = new Intl.DateTimeFormat("es-PE", {
+    weekday: "long",
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+  const headerDateLabel = `${todayLabel.charAt(0).toUpperCase()}${todayLabel.slice(1)}`;
 
   // Category status
   const categoryStatus = CATEGORIES.map((cat) => {
@@ -87,7 +94,7 @@ export function Dashboard() {
         </div>
         <div className="relative flex items-center justify-between flex-wrap gap-4">
           <div>
-            <p className="text-blue-300 text-sm mb-1">Panel de Control · Martes 10 de Marzo, 2025</p>
+            <p className="text-blue-300 text-sm mb-1">Panel de Control · {headerDateLabel}</p>
             <h2 className={styles.headerTitle}>
               Torres del Parque
             </h2>
