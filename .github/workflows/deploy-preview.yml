@@ -10,7 +10,7 @@ env:
 
 permissions:
   contents: read
-  pull-requests: read
+  pull-requests: write  # needed to post the Vercel preview comment
 
 jobs:
   build:
@@ -41,11 +41,19 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'placeholder-key' }}
+          VITE_APP_ENV: preview
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          VITE_APP_VERSION: pr-${{ github.event.pull_request.number }}
 
-      # Uncomment when a hosting provider is configured (Vercel, Netlify, etc.)
-      # - name: Deploy to Vercel
-      #   uses: amondnet/vercel-action@v25
-      #   with:
-      #     vercel-token: ${{ secrets.VERCEL_TOKEN }}
-      #     vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-      #     vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+      - name: Deploy Preview to Vercel
+        if: ${{ env.VERCEL_TOKEN != '' }}
+        uses: amondnet/vercel-action@v25
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: "--env VITE_APP_ENV=preview"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-comment: true

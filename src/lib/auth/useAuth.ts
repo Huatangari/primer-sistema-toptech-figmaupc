@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import { IS_SUPABASE_CONFIGURED, supabase } from "./authClient";
+import { identifyUser, clearUser } from "../monitoring/sentry";
 
 export interface AuthState {
   user: User | null;
@@ -37,6 +38,11 @@ export function useAuth(): AuthState {
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       setLoading(false);
+      if (nextSession?.user) {
+        identifyUser(nextSession.user.id, nextSession.user.email);
+      } else {
+        clearUser();
+      }
     });
 
     return () => subscription.unsubscribe();
