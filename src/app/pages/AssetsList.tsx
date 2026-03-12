@@ -139,7 +139,7 @@ export function AssetsList() {
 
         <button
           type="button"
-          onClick={() => alert("Función disponible en la versión completa")}
+          onClick={() => navigate("/activos/nuevo")}
           className={styles.addButton}
         >
           <Plus size={15} aria-hidden="true" />

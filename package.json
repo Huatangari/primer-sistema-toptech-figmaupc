@@ -7,7 +7,10 @@
     "build": "vite build",
     "dev": "vite",
     "test": "vitest run",
+    "test:smoke": "vitest run src/app/routes.smoke.test.tsx src/app/router/ProtectedRoute.test.tsx",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "lint:css": "stylelint \"src/**/*.css\"",
@@ -70,6 +73,7 @@
     "vaul": "1.1.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@testing-library/react": "^16.3.0",
     "@commitlint/cli": "^20.4.3",
     "@commitlint/config-conventional": "^20.4.3",
@@ -118,7 +122,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "node --max-old-space-size=512 ./node_modules/.bin/eslint --max-warnings=0 --fix"
+      "eslint --max-warnings=0 --fix"
     ],
     "*.css": [
       "stylelint --fix"

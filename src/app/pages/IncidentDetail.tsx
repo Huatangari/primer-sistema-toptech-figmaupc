@@ -10,7 +10,7 @@ import { useData } from "../hooks/useData";
 import { getIncidentById, getIncidentEvents } from "../../lib/services/incidents";
 import { getAssetById } from "../../lib/services/assets";
 import { closeIncident } from "../../lib/api/endpoints";
-import { getCategoryColor, formatDate, formatDateTime } from "../../lib/utils";
+import { formatDate, formatDateTime, getCategoryColor, isIncidentClosed, isIncidentOpen } from "../../lib/utils";
 import { Asset, Incident, IncidentEvent } from "../../lib/types";
 
 export function IncidentDetail() {
@@ -55,7 +55,8 @@ export function IncidentDetail() {
     );
   }
 
-  const isOpen = incident.status === "Abierta" || incident.status === "En Proceso";
+  const isOpen = isIncidentOpen(incident.status);
+  const isResolved = isIncidentClosed(incident.status);
 
   const handleConfirmClose = async () => {
     if (!incident || isClosing) return;
@@ -127,7 +128,7 @@ export function IncidentDetail() {
               </button>
             </div>
           )}
-          {incident.status === "Resuelta" && (
+          {isResolved && (
             <div className="flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 rounded-xl px-4 py-2">
               <CheckCircle size={16} className="text-emerald-400" />
               <div>

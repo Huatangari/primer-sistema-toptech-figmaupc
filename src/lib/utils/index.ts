@@ -1,4 +1,5 @@
 import { AssetStatus, IncidentPriority, IncidentStatus, DocumentType, ProviderStatus } from "../types";
+export { isIncidentClosed, isIncidentOpen, normalizeIncidentStatus } from "./incidentStatus";
 
 // ─── Re-export cn from ui/utils to provide a single import point ─────────────
 export { cn } from "../../app/components/ui/utils";
@@ -80,7 +81,7 @@ export function getIncidentStatusColors(status: IncidentStatus) {
     case "Resuelta":
       return { bg: "bg-emerald-100", text: "text-emerald-700" };
     case "Cerrada":
-      return { bg: "bg-gray-100", text: "text-gray-600" };
+      return { bg: "bg-emerald-100", text: "text-emerald-700" };
     default:
       return { bg: "bg-gray-100", text: "text-gray-600" };
   }

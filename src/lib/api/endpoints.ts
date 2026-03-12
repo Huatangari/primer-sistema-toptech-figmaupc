@@ -11,6 +11,8 @@ import { supabase, IS_SUPABASE_CONFIGURED } from "../auth/authClient";
 import { mockIncidents, mockIncidentEvents } from "../mock-data/incidents";
 import type { Incident, Document } from "../types";
 import type { IncidentPriority } from "../types";
+import { mapDocument, mapIncident } from "./mappers";
+import type { DocumentRow, IncidentRow } from "../types/database";
 
 // ─── Input types ─────────────────────────────────────────────────────────────
 
@@ -73,7 +75,7 @@ export async function createIncident(input: CreateIncidentInput): Promise<Incide
   });
 
   if (error) throw new Error(error.message);
-  return data.data as Incident;
+  return mapIncident(data.data as IncidentRow);
 }
 
 /**
@@ -108,7 +110,7 @@ export async function closeIncident(input: CloseIncidentInput): Promise<Incident
   });
 
   if (error) throw new Error(error.message);
-  return data.data as Incident;
+  return mapIncident(data.data as IncidentRow);
 }
 
 /**
@@ -127,7 +129,7 @@ export async function uploadDocument(input: UploadDocumentInput): Promise<Docume
   });
 
   if (error) throw new Error(error.message);
-  return data.data as Document;
+  return mapDocument(data.data as DocumentRow);
 }
 
 /**

@@ -4,7 +4,7 @@
 --
 -- Orden:
 --   1. Funciones helper (security definer — evitan recursión RLS)
---   2. Drop políticas dev
+--   2. Limpieza de políticas existentes
 --   3. Políticas por tabla y por rol
 -- =============================================================================
 
@@ -42,22 +42,39 @@ $$;
 
 
 -- -----------------------------------------------------------------------------
--- 2. DROP POLÍTICAS DEV
+-- 2. LIMPIEZA DE POLITICAS EXISTENTES
+-- Evita conflictos cuando schema.sql ya trae RLS base y este archivo se re-ejecuta.
 -- -----------------------------------------------------------------------------
 
-drop policy if exists "dev_all_buildings"           on buildings;
-drop policy if exists "dev_all_providers"           on providers;
-drop policy if exists "dev_all_provider_categories" on provider_categories;
-drop policy if exists "dev_all_assets"              on assets;
-drop policy if exists "dev_all_asset_history"       on asset_history;
-drop policy if exists "dev_all_incidents"           on incidents;
-drop policy if exists "dev_all_incident_events"     on incident_events;
-drop policy if exists "dev_all_documents"           on documents;
+do $$
+declare
+  p record;
+begin
+  for p in
+    select tablename, policyname
+    from pg_policies
+    where schemaname = 'public'
+      and tablename in (
+        'building_users',
+        'buildings',
+        'providers',
+        'provider_categories',
+        'assets',
+        'asset_history',
+        'incidents',
+        'incident_events',
+        'documents'
+      )
+  loop
+    execute format('drop policy if exists %I on %I', p.policyname, p.tablename);
+  end loop;
+end
+$$;
 
 
 -- -----------------------------------------------------------------------------
--- 3. POLÍTICAS POR TABLA
--- Convención de nombres: "{tabla}_{operación}_{rol}"
+-- 3. POLITICAS POR TABLA
+-- Convencion de nombres: "{tabla}_{operacion}_{rol}"
 -- -----------------------------------------------------------------------------
 
 -- ── building_users ──────────────────────────────────────────────────────────
@@ -251,3 +268,4 @@ create policy "documents_delete_admin"
 -- documents        CRUD    CRU          R
 -- building_users   CRUD    R(own)       R(own)
 -- =============================================================================
+

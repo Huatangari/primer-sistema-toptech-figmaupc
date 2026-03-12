@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+﻿import { useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Upload, X, Camera, CheckCircle } from "lucide-react";
+import { ArrowLeft, Camera, CheckCircle, Upload, X } from "lucide-react";
 import { useData } from "../hooks/useData";
+import { createIncident } from "../../lib/api/endpoints";
 import { getAssets } from "../../lib/services/assets";
-import { Asset } from "../../lib/types";
+import { Asset, IncidentPriority } from "../../lib/types";
 
 export function IncidentForm() {
   const navigate = useNavigate();
@@ -14,27 +15,50 @@ export function IncidentForm() {
     assetId: "",
     title: "",
     description: "",
-    priority: "Media",
+    priority: "Media" as IncidentPriority,
     observations: "",
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setImagePreview(ev.target?.result as string);
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submitting) return;
+
+    setSubmitError(null);
+    setSubmitting(true);
+
+    try {
+      await createIncident({
+        asset_id: form.assetId,
+        title: form.title.trim(),
+        description: form.description.trim(),
+        priority: form.priority,
+        observations: form.observations.trim() || undefined,
+      });
+
+      setSubmitted(true);
+      setTimeout(() => navigate("/incidencias"), 1200);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "No se pudo registrar la incidencia");
+      setSubmitting(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => {
-      navigate("/incidencias");
-    }, 2000);
+  const handleCancel = () => {
+    if (submitting) return;
+    navigate("/incidencias");
   };
 
   if (submitted) {
@@ -44,9 +68,7 @@ export function IncidentForm() {
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-emerald-600" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            Incidencia registrada
-          </h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Incidencia registrada</h3>
           <p className="text-gray-500 text-sm">Redirigiendo al listado...</p>
         </div>
       </div>
@@ -57,7 +79,7 @@ export function IncidentForm() {
     <div className="p-6 max-w-2xl mx-auto space-y-5">
       <button
         type="button"
-        onClick={() => navigate("/incidencias")}
+        onClick={handleCancel}
         className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
       >
         <ArrowLeft size={15} />
@@ -71,7 +93,12 @@ export function IncidentForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Asset */}
+          {submitError && (
+            <p className="text-sm text-red-600" role="alert">
+              {submitError}
+            </p>
+          )}
+
           <div>
             <label htmlFor="assetId" className="block text-sm font-medium text-gray-700 mb-1.5">
               Activo relacionado <span className="text-red-500">*</span>
@@ -86,16 +113,15 @@ export function IncidentForm() {
               <option value="">Seleccionar activo...</option>
               {assets.map((a) => (
                 <option key={a.id} value={a.id}>
-                  {a.code} – {a.name}
+                  {a.code} - {a.name}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Title */}
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Título de la incidencia <span className="text-red-500">*</span>
+              Titulo de la incidencia <span className="text-red-500">*</span>
             </label>
             <input
               id="title"
@@ -108,41 +134,42 @@ export function IncidentForm() {
             />
           </div>
 
-          {/* Priority */}
           <div>
             <p id="priority-label" className="block text-sm font-medium text-gray-700 mb-1.5">
               Prioridad <span className="text-red-500">*</span>
             </p>
             <div className="grid grid-cols-4 gap-2" role="group" aria-labelledby="priority-label">
-              {["Crítica", "Alta", "Media", "Baja"].map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setForm({ ...form, priority: p })}
-                  className={`py-2 rounded-lg text-sm border transition-all ${
-                    form.priority === p ? "font-semibold" : "font-normal"
-                  } ${
-                    form.priority === p
-                      ? p === "Crítica"
-                        ? "bg-red-600 border-red-600 text-white"
-                        : p === "Alta"
-                        ? "bg-orange-500 border-orange-500 text-white"
-                        : p === "Media"
-                        ? "bg-amber-500 border-amber-500 text-white"
-                        : "bg-blue-500 border-blue-500 text-white"
-                      : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
+              {["Critica", "Alta", "Media", "Baja"].map((p) => {
+                const priority = p === "Critica" ? "Crítica" : (p as IncidentPriority);
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setForm({ ...form, priority })}
+                    className={`py-2 rounded-lg text-sm border transition-all ${
+                      form.priority === priority ? "font-semibold" : "font-normal"
+                    } ${
+                      form.priority === priority
+                        ? priority === "Crítica"
+                          ? "bg-red-600 border-red-600 text-white"
+                          : priority === "Alta"
+                            ? "bg-orange-500 border-orange-500 text-white"
+                            : priority === "Media"
+                              ? "bg-amber-500 border-amber-500 text-white"
+                              : "bg-blue-500 border-blue-500 text-white"
+                        : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Description */}
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Descripción detallada <span className="text-red-500">*</span>
+              Descripcion detallada <span className="text-red-500">*</span>
             </label>
             <textarea
               id="description"
@@ -150,15 +177,14 @@ export function IncidentForm() {
               rows={4}
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder="Describe la falla con detalle: qué ocurrió, cuándo, qué síntomas se observan..."
+              placeholder="Describe la falla con detalle: que ocurrio, cuando, que sintomas se observan..."
               className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm outline-none bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-100 text-gray-700 resize-none"
             />
           </div>
 
-          {/* Evidence upload */}
           <div>
             <label htmlFor="evidence" className="block text-sm font-medium text-gray-700 mb-1.5">
-              Evidencia fotográfica
+              Evidencia fotografica
             </label>
 
             {imagePreview ? (
@@ -167,7 +193,10 @@ export function IncidentForm() {
                 <button
                   type="button"
                   aria-label="Quitar imagen"
-                  onClick={() => { setImagePreview(null); if (fileRef.current) fileRef.current.value = ""; }}
+                  onClick={() => {
+                    setImagePreview(null);
+                    if (fileRef.current) fileRef.current.value = "";
+                  }}
                   className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center"
                 >
                   <X size={12} aria-hidden="true" />
@@ -181,22 +210,14 @@ export function IncidentForm() {
                 <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <Camera size={20} className="text-gray-400" />
                 </div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Adjuntar fotografía</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">Adjuntar fotografia</p>
                 <p className="text-xs text-gray-400">Arrastra una imagen o haz clic para seleccionar</p>
                 <p className="text-xs text-gray-300 mt-1">JPG, PNG hasta 10 MB</p>
               </div>
             )}
-            <input
-              id="evidence"
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
+            <input id="evidence" ref={fileRef} type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
           </div>
 
-          {/* Observations */}
           <div>
             <label htmlFor="observations" className="block text-sm font-medium text-gray-700 mb-1.5">
               Observaciones adicionales
@@ -211,21 +232,22 @@ export function IncidentForm() {
             />
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
             <button
               type="button"
-              onClick={() => navigate("/incidencias")}
-              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm py-2.5 rounded-lg transition-colors"
+              onClick={handleCancel}
+              disabled={submitting}
+              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 text-sm py-2.5 rounded-lg transition-colors disabled:opacity-60"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+              disabled={submitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
               <Upload size={15} />
-              Registrar Incidencia
+              {submitting ? "Registrando..." : "Registrar Incidencia"}
             </button>
           </div>
         </form>
@@ -233,3 +255,4 @@ export function IncidentForm() {
     </div>
   );
 }
+
